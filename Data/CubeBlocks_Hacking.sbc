@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CubeBlocks>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>HackingBlock_Small</SubtypeId>
+      </Id>
+      <Public>true</Public>
+      <DisplayName>Hacking Computer</DisplayName>
+      <Icon>Textures\GUI\Icons\HackingComputer.dds</Icon>
+      <CubeSize>Small</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="2" y="1" z="2" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Hacking\HackingComputer.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="10" />
+        <Component Subtype="Construction" Count="2" />
+        <Component Subtype="Superconductor" Count="1" />
+        <Component Subtype="Computer" Count="50" />
+        <Component Subtype="Display" Count="1" />
+        <Component Subtype="BulletproofGlass" Count="2" />
+      </Components>
+      <CriticalComponent Subtype="Display" Index="0" />
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.50" File="Models\Hacking\HackingComputer_Constr1.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Hacking\HackingComputer_Constr2.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>HackingComputer</BlockPairName>
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <MountPoints>
+        <Mountpoint Side="Bottom" StartX="0" StartY="0" EndX="2" EndY="2" />
+      </MountPoints>
+      <DamageEffectId>214</DamageEffectId>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <Upgrades></Upgrades>
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+        <SubtypeId>HackingBlock_Large</SubtypeId>
+      </Id>
+      <Public>true</Public>
+      <DisplayName>Hacking Computer</DisplayName>
+      <Icon>Textures\GUI\Icons\HackingComputer.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+      <Size x="1" y="1" z="1" />
+      <ModelOffset x="0" y="0" z="0" />
+      <Model>Models\Hacking\HackingComputerLarge.mwm</Model>
+      <Components>
+        <Component Subtype="SteelPlate" Count="50" />
+        <Component Subtype="Construction" Count="25" />
+        <Component Subtype="SmallTube" Count="10" />
+        <Component Subtype="RadioCommunication" Count="5" />
+        <Component Subtype="Superconductor" Count="60" />
+        <Component Subtype="Computer" Count="300" />
+        <Component Subtype="Display" Count="5" />
+        <Component Subtype="BulletproofGlass" Count="15" />
+      </Components>
+      <CriticalComponent Subtype="Display" Index="0" />
+      <BuildProgressModels>
+        <Model BuildPercentUpperBound="0.5" File="Models\Hacking\HackingComputerLarge_Constr1.mwm" />
+        <Model BuildPercentUpperBound="1.00" File="Models\Hacking\HackingComputerLarge_Constr2.mwm" />
+      </BuildProgressModels>
+      <BlockPairName>HackingComputer</BlockPairName>
+      <MirroringY>Z</MirroringY>      
+      <MirroringZ>Y</MirroringZ>
+      <EdgeType>Light</EdgeType>
+      <BuildTimeSeconds>20</BuildTimeSeconds>
+      <MountPoints>
+        <MountPoint Side="Bottom" StartX="0.0" StartY="0" EndX="1.0" EndY="1.0" />
+      </MountPoints>
+      <DamageEffectId>214</DamageEffectId>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <Upgrades></Upgrades>
+    </Definition>
+  </CubeBlocks>
+</Definitions>
