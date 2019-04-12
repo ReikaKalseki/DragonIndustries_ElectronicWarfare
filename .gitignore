@@ -18,14 +18,14 @@ $RECYCLE.BIN/
 *.lnk
 
 
-.blend
-.blend1
-.png
-.pdn
-.rar
+*.blend
+*.blend1
+*.png
+*.pdn
+*.rar
 
-.mwm
-.dds
+*.mwm
+*.dds
 
 # =========================
 # Operating System Files
