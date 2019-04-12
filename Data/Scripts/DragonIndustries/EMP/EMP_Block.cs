@@ -153,7 +153,7 @@ namespace DragonIndustries {
         
         public override void UpdateAfterSimulation100() {
 			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
-			if (cyclesOn > 0 || (thisBlock.IsWorking && (thisBlock as IMyFunctionalBlock).Enabled)) {
+			if (cyclesOn > 0 || (thisBlock.IsWorking && thisBlock.Enabled)) {
 				cyclesOn++;
 				thisBlock.ApplyAction("OnOff_On"); //force to keep on once charging begins
 				if (readyToFire) {
@@ -194,7 +194,7 @@ namespace DragonIndustries {
 			//bool connected = isEMPerConnected();
 			
 			//MyAPIGateway.Utilities.ShowNotification("Block enabled, can run: "+connected);    
-			
+			//IO.debug();
 			//if (connected) {
 				bool doneFiring = affectEnemyBlocks();
 				//NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;

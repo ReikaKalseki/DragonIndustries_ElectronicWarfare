@@ -54,8 +54,8 @@ namespace DragonIndustries
         private float retaliatoryDamage = 0;
         private HashSet<TargetCategories> activeCategories = new HashSet<TargetCategories>();
 
-        private const string tickSound = "ArcBlockTimerSignalA";
-        private const string successSound = "ArcBlockTimerSignalC";
+        private const string tickSound = "BlockTimerSignalA";
+        private const string successSound = "BlockTimerSignalC";
         private const string failSound = "ArcParticleElectricalDischarge";
 
         public const int blinkLength = 1;
@@ -167,8 +167,12 @@ namespace DragonIndustries
         		}
 			}
 				
-			thisGrid.GetBlocks(blocks, b => b.FatBlock is IMyTerminalBlock && isHackable(b.FatBlock as IMyTerminalBlock) && isHackingCategory(b.FatBlock as IMyTerminalBlock) && !blacklist.Contains((b.FatBlock as IMyTerminalBlock).CustomName));
+			findTargets(thisGrid, blocks, blacklist);
+			foreach (IMyCubeGrid g in getOwnChildGrids())
+				findTargets(g, blocks, blacklist);
+			
 			//IO.log(IO.toUsefulString(blocks));
+			
 			if (blocks.Count > 0) {				
 				int idx = rand.Next(blocks.Count);
 				IMyTerminalBlock block = blocks[idx].FatBlock as IMyTerminalBlock;
@@ -182,6 +186,10 @@ namespace DragonIndustries
 				isIdle = true;
 				state = States.NOWORK;
 			}
+        }
+        
+        private void findTargets(IMyCubeGrid grid, List<IMySlimBlock> blocks, HashSet<string> blacklist) {
+        	grid.GetBlocks(blocks, b => b.FatBlock is IMyTerminalBlock && isHackable(b.FatBlock as IMyTerminalBlock) && isHackingCategory(b.FatBlock as IMyTerminalBlock) && !blacklist.Contains((b.FatBlock as IMyTerminalBlock).CustomName));
         }
         
         protected override void doGuiInit() {
@@ -370,7 +378,7 @@ namespace DragonIndustries
 			thisGrid.GetBlocks(blocks, b => b.FatBlock is IMyTextPanel && (b.FatBlock as IMyTextPanel).CustomName.Contains("HackingOut"));
 			foreach (IMySlimBlock panelslim in blocks) {
 				IMyTextPanel panel = panelslim.FatBlock as IMyTextPanel;
-				panel.WritePublicText(sb.ToString());
+				panel.WriteText(sb.ToString());
 				panel.ShowPublicTextOnScreen();
 			}
         }

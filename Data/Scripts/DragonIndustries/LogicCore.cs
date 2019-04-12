@@ -17,9 +17,14 @@ using VRage.ModAPI;
 using SpaceEngineers.Game.ModAPI;
 using VRage.Game.Entity;
 
+using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
+using IMyFunctionalBlock = Sandbox.ModAPI.IMyFunctionalBlock;
+
 namespace DragonIndustries {
 	
     public abstract class LogicCore : MyGameLogicComponent {
+		
+		private const bool EMISSIVES_ENABLED = false; //needs compatible models
     	
         protected readonly Random rand = new Random();
         
@@ -37,6 +42,8 @@ namespace DragonIndustries {
         protected void doSetup(string powerPriority, float maxPowerInMW, params MyEntityUpdateEnum[] updateCycles) {
 			NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
             Entity.NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
+            NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
+            Entity.NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
             
             if (updateCycles.Length == 0) {
             	IO.log("WARNING: "+this+" has no update cycles set!");
@@ -48,7 +55,10 @@ namespace DragonIndustries {
             }
             
         	thisBlock = Container.Entity as IMyFunctionalBlock;
-			thisGrid = thisBlock.CubeGrid as IMyCubeGrid;			
+			thisGrid = thisBlock.CubeGrid as IMyCubeGrid;
+			
+			thisBlock.Enabled = false;
+			Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
 			
             energySink = new MyResourceSinkComponent(1);
             energySink.Init(MyStringHash.GetOrCompute(powerPriority), maxPowerInMW, calcRequiredPower);
@@ -75,7 +85,14 @@ namespace DragonIndustries {
 			IO.log("Loaded logic script "+this+" for block '"+thisBlock.CustomName+"' / '"+Entity.DisplayName+"' #"+Entity.EntityId+"; update rate = "+NeedsUpdate);
         }
         
+		public sealed override void UpdateOnceBeforeFrame() {
+			thisBlock.Enabled = false;
+			Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
+		}
+        
         protected void prepareEmissives(string prefix, int count) {
+        	if (!EMISSIVES_ENABLED)
+        		return;
         	emissiveNames = new string[count];
         	if (count == 1) {
         		emissiveNames[0] = prefix;
@@ -89,6 +106,8 @@ namespace DragonIndustries {
         
         /** Pass in a channel "0" to set all. */
         public void setEmissiveChannel(int channel, Color clr, float value) {
+        	if (!EMISSIVES_ENABLED)
+        		return;
         	if (channel == 0) {
         		foreach (string em in emissiveNames) {
         			thisBlock.SetEmissiveParts(em, clr, value);
@@ -158,6 +177,28 @@ namespace DragonIndustries {
         
         protected virtual void onEnergyLoss() {
         	
+        }
+        
+        protected List<IMyCubeGrid> getOwnChildGrids(bool recurse = true) {
+        	return getChildGridsOf(thisGrid);
+        }
+        
+        protected static List<IMyCubeGrid> getChildGridsOf(IMyCubeGrid grid) {
+        	List<IMyCubeGrid> ret = new List<IMyCubeGrid>();
+        	List<IMySlimBlock> li = new List<IMySlimBlock>();
+        	grid.GetBlocks(li);
+        	foreach (IMySlimBlock b in li) {
+        		IMyCubeBlock bk = b.FatBlock;
+        		if (bk is IMyMechanicalConnectionBlock) {
+        			//MyAPIGateway.Utilities.ShowNotification("Found a connection "+bk.DefinitionDisplayNameText);
+        			IMyAttachableTopBlock con = (bk as IMyMechanicalConnectionBlock).Top;
+        			if (con != null && con.CubeGrid != null && con.CubeGrid != grid && !ret.Contains(con.CubeGrid)) {
+        				//MyAPIGateway.Utilities.ShowNotification("Found grid ID "+con.CubeGrid.EntityId+" as a child of "+grid.EntityId);
+          				ret.Add(con.CubeGrid);
+        			}
+        		}
+        	}
+        	return ret;
         }
         
         public MultiSoundSource getSounds() {

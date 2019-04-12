@@ -38,6 +38,7 @@ namespace DragonIndustries
         public long lastTick = 0;
         
         public bool enableDerendering = false;
+        private readonly List<IMySlimBlock> turrets = new List<IMySlimBlock>();
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder) {	            
         	doSetup("Defense", 0.001F, MyEntityUpdateEnum.EACH_100TH_FRAME);
@@ -48,7 +49,7 @@ namespace DragonIndustries
         protected override void updateInfo(IMyTerminalBlock block, StringBuilder sb) {
         	sb.Append("Ship mass is "+thisGrid.Physics.Mass+" kg. Base power use is "+MW_PER_TONNE+" kW/kg");
         	sb.Append("\n\n");
-        	sb.Append("Weapons Active: "+isShooting());
+        	sb.Append("Weapons (x"+turrets.Count/2+") Active: "+isShooting());
         	if (isShooting()) {
         		sb.Append(" (energy use x"+WEAPON_USE_MULTIPLIER+")");
         	}
@@ -107,32 +108,48 @@ namespace DragonIndustries
             else */if (shouldUsePower()) {
                 running = true;
             }
+            
+            //MyAPIGateway.Utilities.ShowNotification("Running: "+running);
 
             if (running) {
                 cloakedGrids.Add(thisGrid.EntityId);
                 if (shouldHideRender()) {
-	                thisGrid.Render.Visible = true;
-	                thisGrid.Visible = false;
-	                //thisGrid.Render.UpdateRenderObject(true);
-	                //thisGrid.Render.UpdateRenderObject(false);
+                	setGridVisible(thisGrid, false);
                 }
                 else {
-	                thisGrid.Render.Visible = true;
-	                thisGrid.Visible = true;
-	                //thisGrid.Render.UpdateRenderObject(true);
-	                //thisGrid.Render.UpdateRenderObject(true);
+	                setGridVisible(thisGrid, true);
                 }
             }
             else {
                 cloakedGrids.Remove(thisGrid.EntityId);
-                thisGrid.Render.Visible = true;
-                thisGrid.Visible = true;
-                //thisGrid.Render.UpdateRenderObject(true);
-                //thisGrid.Render.UpdateRenderObject(true);
+                setGridVisible(thisGrid, true);
             }
             
             sync();
             thisBlock.RefreshCustomInfo();        
+        }
+        
+        private void setGridVisible(IMyCubeGrid grid, bool visible) {
+        	grid.Render.Visible = true;
+	        grid.Visible = visible;
+	                
+	        if (visible) {
+	        	grid.Render.UpdateRenderObject(true, true);
+	        }
+	        else {
+	        	grid.Render.RemoveRenderObjects();
+     			grid.Render.AddRenderObjects();
+	        	grid.Render.UpdateRenderObject(true, true);
+	        	grid.Render.UpdateRenderObject(false, true);
+	        }
+	        
+	        foreach (IMyCubeGrid g2 in getChildGridsOf(grid)) {
+	        	setGridVisible(g2, visible);
+	        }
+	                //thisGrid.Render.RemoveRenderObjects();
+	                
+	                //thisGrid.Render.UpdateRenderObject(true);
+	        //thisGrid.Render.UpdateRenderObject(false);
         }
 
         protected override float getRequiredPower() {
@@ -153,16 +170,36 @@ namespace DragonIndustries
         }
 
         private bool isShooting() {            
-            List<IMySlimBlock> turrets = new List<IMySlimBlock>();
+        	turrets.Clear();
             thisGrid.GetBlocks(turrets, b => b.FatBlock is IMyUserControllableGun);
+            thisGrid.GetBlocks(turrets, b => b.FatBlock is IMyLargeTurretBase);
             
             foreach (IMySlimBlock turret in turrets) {
-                MyObjectBuilder_CubeBlock obj = ((MyObjectBuilder_UserControllableGun)turret.FatBlock.GetObjectBuilderCubeBlock());
-                if (obj is MyObjectBuilder_UserControllableGun)
-                	if ((obj as MyObjectBuilder_UserControllableGun).IsShooting)
-                		return true;
-                else if ((obj as MyObjectBuilder_TurretBase).GunBase.LastShootTime > lastTick)
-                		return true;
+            	MyObjectBuilder_CubeBlock obj = null;
+            	bool f1 = false;
+            	bool f2 = false;
+            	bool f3 = false;
+            	bool f4 = false;
+            	try {
+	                obj = ((MyObjectBuilder_UserControllableGun)turret.FatBlock.GetObjectBuilderCubeBlock());
+	                f1 = true;
+	                if (obj is MyObjectBuilder_UserControllableGun) {
+	                	MyObjectBuilder_UserControllableGun gun = obj as MyObjectBuilder_UserControllableGun;
+	                	f2 = true;
+	                	if (gun.IsShooting || gun.IsShootingFromTerminal) {
+	                		f3 = true;
+	                		return true;
+	                	}
+	                }
+	                else if ((obj as MyObjectBuilder_TurretBase).GunBase != null && (obj as MyObjectBuilder_TurretBase).GunBase.LastShootTime > lastTick) {
+	                	f4 = true;
+	                	return true;
+	                }
+            	}
+            	catch (Exception e) {
+            		//MyAPIGateway.Utilities.ShowNotification("Threw exception: "+e.ToString()+" on block "+turret+" with "+obj);
+            		IO.log("Threw exception checking if cloaked ship is shooting: "+e.ToString()+" on block "+turret+" with "+obj+" & flags "+f1+", "+f2+", "+f3+", "+f4);
+            	}
             }
             
             return false;
