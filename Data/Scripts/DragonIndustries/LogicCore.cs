@@ -20,6 +20,8 @@ using VRage.Game.Entity;
 using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 using IMyFunctionalBlock = Sandbox.ModAPI.IMyFunctionalBlock;
 
+using Sandbox.ModAPI.Interfaces.Terminal;
+
 namespace DragonIndustries {
 	
     public abstract class LogicCore : MyGameLogicComponent {
@@ -79,6 +81,7 @@ namespace DragonIndustries {
             
             thisBlock.IsWorkingChanged += onWorkingChanged;
             thisBlock.AppendingCustomInfo += updateInfo;
+            MyAPIGateway.TerminalControls.CustomControlGetter += filterControls;
 
             soundSource = new MultiSoundSource(thisBlock);
 			
@@ -120,6 +123,15 @@ namespace DragonIndustries {
 
         protected virtual void updateInfo(IMyTerminalBlock block, StringBuilder sb) {
             
+        }
+
+        private void filterControls(IMyTerminalBlock block, List<IMyTerminalControl> controls) {
+        	foreach (IMyTerminalControl control in new List<IMyTerminalControl>(controls)) {
+        		//MyAPIGateway.Utilities.ShowNotification(block.CustomName+" check "+control.Id+" > '"+lgc+"' & "+GetType());
+        		if (!ControlFuncs.isOptionApplicable(block, control, this)) {
+			        controls.Remove(control);
+			    }
+			}
         }
 
         protected virtual void onWorkingChanged(IMyCubeBlock block) {

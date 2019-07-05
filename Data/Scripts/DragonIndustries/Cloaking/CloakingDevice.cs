@@ -31,9 +31,12 @@ namespace DragonIndustries
     {
         private static readonly HashSet<long> cloakedGrids = new HashSet<long>();
 
-        public static readonly float MW_PER_TONNE = Configuration.getSetting(Settings.CLOAKPOWER).asFloat();
+        public static readonly float MW_PER_TONNE_SMALLGRID = Configuration.getSetting(Settings.CLOAKPOWERSMALL).asFloat();
+        public static readonly float MW_PER_TONNE_LARGEGRID = Configuration.getSetting(Settings.CLOAKPOWERLARGE).asFloat();
         public static readonly float WEAPON_USE_MULTIPLIER = Configuration.getSetting(Settings.CLOAKWEAPONPOWER).asFloat();
         public static readonly float DERENDER_MULTIPLIER = Configuration.getSetting(Settings.CLOAKRENDERPOWER).asFloat();
+        
+        private float MW_PER_TONNE;
 
         public long lastTick = 0;
         
@@ -42,11 +45,14 @@ namespace DragonIndustries
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder) {	            
         	doSetup("Defense", 0.001F, MyEntityUpdateEnum.EACH_100TH_FRAME);
+        	MW_PER_TONNE = thisGrid.GridSizeEnum == MyCubeSize.Large ? MW_PER_TONNE_LARGEGRID : MW_PER_TONNE_SMALLGRID;
             
             lastTick = DateTime.UtcNow.Ticks;
         }
 
         protected override void updateInfo(IMyTerminalBlock block, StringBuilder sb) {
+        	if (thisGrid == null || thisGrid.Physics == null)
+        		return;
         	sb.Append("Ship mass is "+thisGrid.Physics.Mass+" kg. Base power use is "+MW_PER_TONNE+" kW/kg");
         	sb.Append("\n\n");
         	sb.Append("Weapons (x"+turrets.Count/2+") Active: "+isShooting());
@@ -243,10 +249,10 @@ namespace DragonIndustries
         
         protected override void doGuiInit() {
  			hideIrrelevantOreDetectorSettings();
-            Func<IMyTerminalBlock, bool> cur = block => block.GameLogic.GetAs<CloakingDevice>().enableDerendering;
-            Action<IMyTerminalBlock, bool> set = (block, flag) => block.GameLogic.GetAs<CloakingDevice>().setDerendering(flag);
+            Func<IMyTerminalBlock, bool> cur = block => block.GameLogic.GetAs<CloakingDevice>() != null && block.GameLogic.GetAs<CloakingDevice>().enableDerendering;
+            Action<IMyTerminalBlock, bool> set = (block, flag) => { if (block.GameLogic.GetAs<CloakingDevice>() != null) block.GameLogic.GetAs<CloakingDevice>().setDerendering(flag); };
             string desc = "Whether the cloaking device not only scrambles turrets, but also makes the ship itself invisible.";
-            new ToggleButton<IMyOreDetector>("derender", "Make Grid Invisible", desc, cur, set).register();
+            new ToggleButton<IMyOreDetector, CloakingDevice>(this, "derender", "Make Grid Invisible", desc, cur, set).register();
         }
     }
 }

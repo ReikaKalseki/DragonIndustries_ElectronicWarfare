@@ -195,12 +195,12 @@ namespace DragonIndustries
         protected override void doGuiInit() {
         	if (Configuration.getSetting(Settings.ALLOWHACKSKIP).asBoolean()) {
 	        	foreach (TargetCategories tg in Enum.GetValues(typeof(TargetCategories))) {        		
-	        		Func<IMyTerminalBlock, bool> cur = block => block.GameLogic.GetAs<HackingBlock>().isHackingCategory(tg);
-		            Action<IMyTerminalBlock, bool> set = (block, flag) => block.GameLogic.GetAs<HackingBlock>().setHackingCategory(tg, flag);
+	        		Func<IMyTerminalBlock, bool> cur = block => block.GameLogic.GetAs<HackingBlock>() != null && block.GameLogic.GetAs<HackingBlock>().isHackingCategory(tg);
+	        		Action<IMyTerminalBlock, bool> set = (block, flag) => { if (block.GameLogic.GetAs<HackingBlock>() != null) { block.GameLogic.GetAs<HackingBlock>().setHackingCategory(tg, flag); }};
 		            string label = tg.ToString().ToLowerInvariant();
 		            label = char.ToUpper(label[0])+label.Substring(1);
 		            string desc = "Whether the hacking computer will attempt to hack blocks of type '"+label+"'";
-		            new OnOffButton<IMyUpgradeModule>(tg.ToString(), "Hack "+label+" Blocks", desc, cur, set).register();
+		            new OnOffButton<IMyUpgradeModule, HackingBlock>(this, tg.ToString(), "Hack "+label+" Blocks", desc, cur, set).register();
 	        	}
         	}
         }

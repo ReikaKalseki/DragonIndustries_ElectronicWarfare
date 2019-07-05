@@ -61,7 +61,8 @@ namespace DragonIndustries {
             defaultSettings.Add(new ConfigEntry(Settings.COMPUTERCONVERT, "Hacking Computers Convert Each Other", true));
             defaultSettings.Add(new ConfigEntry(Settings.ALLOWHACKSKIP, "Allow Hacking Computers To Ignore User Specified Blocks", true));
             defaultSettings.Add(new ConfigEntry(Settings.HACKRETRY, "Hacking Computers Lock To Target Until Success", false));
-            defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWER, "Cloaking Device Base Power Consumption (MW) Per Tonne", 0.5F));
+            defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWERSMALL, "Cloaking Device Base Power Consumption (MW) Per Tonne - Small Grid", 0.5F));
+            defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWERLARGE, "Cloaking Device Base Power Consumption (MW) Per Tonne - Large Grid", 0.016F));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKWEAPONPOWER, "Cloaking Device Power Consumption Factor During Weapon Usage", 2.4F));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKRENDERPOWER, "Cloaking Device Power Consumption Factor During Invisibility", 1.6F));
             			
