@@ -17,6 +17,8 @@ namespace DragonIndustries {
         	EMP,
         	HACKING,
         	CLOAKING,
+        	SNIFFER,
+        	RADAR
         };
         
         public static bool HasBeenInitialized {
@@ -57,6 +59,12 @@ namespace DragonIndustries {
 		        		case Packets.CLOAKING:
 		        			handleCloakingPacket(p, entity);
 		        			break;
+		        		case Packets.SNIFFER:
+		        			handleSnifferPacket(p, entity);
+		        			break;
+		        		case Packets.RADAR:
+		        			handleRadarPacket(p, entity);
+		        			break;
 		        	}
                 	//IO.log("Successfully handled packet "+type.ToString());
                 }
@@ -66,6 +74,36 @@ namespace DragonIndustries {
         	}
             catch (Exception e) {
         		IO.log("Threw exception while handling packet type "+type.ToString()+": "+e.ToString());
+            }
+        }
+        
+        private static void handleRadarPacket(Packet p, IMyEntity entity) {
+            try {
+                RadarEmitter logic = entity.GameLogic.GetAs<RadarEmitter>();
+                if (logic != null) {
+                	
+                }
+                else {
+                   IO.log("Radar logic did not exist on client to process sync packet!");
+                }
+            }
+            catch (Exception e) {
+        		IO.log("Threw exception while handling radar packet: "+e.ToString());
+            }
+        }
+        
+        private static void handleSnifferPacket(Packet p, IMyEntity entity) {
+            try {
+                DeviceSniffer logic = entity.GameLogic.GetAs<DeviceSniffer>();
+                if (logic != null) {
+                	
+                }
+                else {
+                   IO.log("Sniffer logic did not exist on client to process sync packet!");
+                }
+            }
+            catch (Exception e) {
+        		IO.log("Threw exception while handling sniffer packet: "+e.ToString());
             }
         }
         
@@ -131,14 +169,21 @@ namespace DragonIndustries {
         	else if (b is HackingBlock) {
         		type = Packets.HACKING;
         	}
-        	else if (b is CloakingDevice) { //b is CloakingDevice
+        	else if (b is CloakingDevice) {
         		type = Packets.CLOAKING;
+        	}
+        	else if (b is DeviceSniffer) {
+        		type = Packets.SNIFFER;
+        	}
+        	else if (b is RadarEmitter) {
+        		type = Packets.RADAR;
         	}
         	
         	if (type != Packets.NONE) {
 	        	Packet p = new Packet(type);
         		p.writeInt((int)type);
 	        	p.writeLong(b.Entity.EntityId);
+	        	p.mark();
 	        	switch(type) {
 	        		case Packets.EMP:
 	        			sendEMPData(p, b as EMP);
@@ -149,8 +194,15 @@ namespace DragonIndustries {
 	        		case Packets.CLOAKING:
 	        			sendCloakData(p, b as CloakingDevice);
 	        		break;
+	        		case Packets.SNIFFER:
+	        			sendSnifferData(p, b as DeviceSniffer);
+	        		break;
+	        		case Packets.RADAR:
+	        			sendRadarData(p, b as RadarEmitter);
+	        		break;
 	        	}
-	        	p.sendToAll();
+	        	if (p.changed())
+	        		p.sendToAll();
         		//IO.log("Send a packet to sync "+b+" with ID "+b.Entity.EntityId);
         	}
         	else {
@@ -192,6 +244,24 @@ namespace DragonIndustries {
                 IO.log("Threw exception while dispatching cloaking packet: "+e.ToString());
             }
         }
+
+        private static void sendSnifferData(Packet p, DeviceSniffer b) {
+            try {
+        		
+            }
+            catch (Exception e) {
+                IO.log("Threw exception while dispatching sniffer packet: "+e.ToString());
+            }
+        }
+
+        private static void sendRadarData(Packet p, RadarEmitter b) {
+            try {
+        		
+            }
+            catch (Exception e) {
+                IO.log("Threw exception while dispatching radar packet: "+e.ToString());
+            }
+        }
         
         internal class Packet {
         	
@@ -200,12 +270,22 @@ namespace DragonIndustries {
         	
         	private int readIndex;
         	
+        	private bool marked = false;
+        	
         	internal Packet(Packets p) {
         		ID = p;
         	}
         	
         	internal Packet(Packets p, byte[] rawdata) : this(p) {
         		data.AddArray(rawdata);
+        	}
+        	
+        	internal void mark() {
+        		marked = true;
+        	}
+        	
+        	internal bool changed() {
+        		return !marked;
         	}
         	
         	public void sendToAll() {
@@ -278,6 +358,7 @@ namespace DragonIndustries {
         		foreach (byte b in dat) {
         			data.Add(b);
         		}
+        		marked = false;
         	}
         	
         	public void writeBoolean(bool val) {
@@ -286,6 +367,7 @@ namespace DragonIndustries {
         		foreach (byte b in dat) {
         			data.Add(b);
         		}
+        		marked = false;
         	}
         	
         	public void writeShort(short val) {
@@ -294,6 +376,7 @@ namespace DragonIndustries {
         		foreach (byte b in dat) {
         			data.Add(b);
         		}
+        		marked = false;
         	}
         	
         	public void writeLong(long val) {
@@ -302,6 +385,7 @@ namespace DragonIndustries {
         		foreach (byte b in dat) {
         			data.Add(b);
         		}
+        		marked = false;
         	}
         	
         	public void writeFloat(float val) {
@@ -318,6 +402,7 @@ namespace DragonIndustries {
         		foreach (byte b in dat) {
         			data.Add(b);
         		}
+        		marked = false;
         	}
         	
         	public void writeString(string val) {
