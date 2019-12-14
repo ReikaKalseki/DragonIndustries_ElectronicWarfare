@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CubeBlocks>
+
+    <Definition xsi:type="MyObjectBuilder_UpgradeModuleDefinition">
+      <Id>
+        <TypeId>UpgradeModule</TypeId>
+		<SubtypeId>Sniffer_Large</SubtypeId>
+      </Id>
+      <Icon>Textures\GUI\Icons\Sniffer.dds</Icon>
+      <CubeSize>Large</CubeSize>
+      <BlockTopology>TriangleMesh</BlockTopology>
+	  <Size x="1" y="2" z="1" />
+	  <ModelOffset x="0" y="0" z="0" />
+	  <Model>Models\Sniffer\Sniffer_Large.mwm</Model>
+	  <MountPoints> 
+		<MountPoint Side="Top" StartX="0" StartY="0" EndX="1" EndY="1" />
+		<MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+	  </MountPoints>
+	  <BuildProgressModels>
+		<Model BuildPercentUpperBound="0.33" File="Models\Sniffer\Sniffer_Large_Constr1.mwm" />
+		<Model BuildPercentUpperBound="0.66" File="Models\Sniffer\Sniffer_Large_Constr2.mwm" />
+		<Model BuildPercentUpperBound="1.00" File="Models\Sniffer\Sniffer_Large_Constr3.mwm" />
+	  </BuildProgressModels>
+      <BlockPairName>Sniffer</BlockPairName>
+      <DisplayName>Sniffer Generator</DisplayName>
+      <Components>
+        <Component Subtype="SteelPlate" Count="100" />
+        <Component Subtype="Construction" Count="50" />
+        <Component Subtype="SmallTube" Count="10" />
+        <Component Subtype="Superconductor" Count="5" />
+        <Component Subtype="Detector" Count="10" />
+        <Component Subtype="Computer" Count="25" />
+        <Component Subtype="RadioCommunication" Count="1" />
+        <Component Subtype="SteelPlate" Count="50" />
+      </Components>
+      <CriticalComponent Subtype="RadioCommunication" Index="0" />
+      <MirroringY>Z</MirroringY>
+      <MirroringZ>Y</MirroringZ>
+      <BuildTimeSeconds>30</BuildTimeSeconds>
+      <EdgeType>Light</EdgeType>
+      <ResourceSinkGroup>Utility</ResourceSinkGroup>
+      <BasePowerInput>0.25</BasePowerInput>
+      <ConsumptionPower>6</ConsumptionPower>
+      <Public>true</Public>
+      <DamageEffectId>214</DamageEffectId>
+      <DamagedSound>ParticleElectrical</DamagedSound>
+      <EmissiveColorPreset>Default</EmissiveColorPreset>
+    </Definition>
+
+  </CubeBlocks>
+</Definitions>

@@ -65,6 +65,8 @@ namespace DragonIndustries {
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWERLARGE, "Cloaking Device Base Power Consumption (MW) Per Tonne - Large Grid", 0.016F));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKWEAPONPOWER, "Cloaking Device Power Consumption Factor During Weapon Usage", 2.4F));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKRENDERPOWER, "Cloaking Device Power Consumption Factor During Invisibility", 1.6F));
+            defaultSettings.Add(new ConfigEntry(Settings.RADARPOWERSMALL, "Radar Scanner Base Power Consumption (MW) Per km2 Range - Small Grid", 0.4F));
+            defaultSettings.Add(new ConfigEntry(Settings.RADARPOWERLARGE, "Radar Scanner Base Power Consumption (MW) Per km2 Range - Large Grid", 0.15F)); 
             			
             foreach (ConfigEntry val in defaultSettings) {
                 if (!settings.ContainsKey(val.ID))

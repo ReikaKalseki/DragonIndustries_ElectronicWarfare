@@ -275,10 +275,7 @@ namespace DragonIndustries
 	        	MyCubeBlock block = target as MyCubeBlock; //because MyTerminalBlock is prohibited?!
 	        	//MyAPIGateway.Utilities.ShowNotification("Hacking target "+(target as IMyTerminalBlock).CustomName, 5000, MyFontEnum.Red);
 				if (rand.NextDouble() <= 1/targetDifficulty) {
-					block.ChangeOwner(0, MyOwnershipShareModeEnum.Faction);
-					block.ChangeBlockOwnerRequest(block.GameLogic.GetAs<HackingBlock>() != null && Configuration.getSetting(Settings.COMPUTERCONVERT).asBoolean() ? thisBlock.OwnerId : 0, MyOwnershipShareModeEnum.Faction); //clear ownership, unless is another hacking computer (convert that)
-					state = States.SUCCESS;
-					cyclesUntilAttempt = successDelay;
+	        		doHack(block);
 				}
 				else {
 					state = States.FAIL;
@@ -295,6 +292,18 @@ namespace DragonIndustries
         	else {
         		IO.log("Could not find target entity (ID="+targetID+") to complete hacking!");
         	}
+        }
+        
+        private void doHack(MyCubeBlock block) {
+        	block.ChangeOwner(0, MyOwnershipShareModeEnum.Faction);
+			block.ChangeBlockOwnerRequest(block.GameLogic.GetAs<HackingBlock>() != null && Configuration.getSetting(Settings.COMPUTERCONVERT).asBoolean() ? thisBlock.OwnerId : 0, MyOwnershipShareModeEnum.Faction); //clear ownership, unless is another hacking computer (convert that)
+			if (block is IMyShipConnector) {
+				IMyShipConnector c = block as IMyShipConnector;
+				//turn off trade mode, when possible
+				//c.GetActionWithName("TradeMode").Apply(c);
+			}
+			state = States.SUCCESS;
+			cyclesUntilAttempt = successDelay;
         }
 
         private bool isHackable(IMyTerminalBlock block) {

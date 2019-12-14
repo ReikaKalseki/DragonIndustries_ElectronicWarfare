@@ -34,7 +34,7 @@ namespace DragonIndustries {
 	        var lgc = block.GameLogic.GetAs<LogicCore>();
 	        string type = lgc != null ? lgc.GetType().ToString() : null;
 	        string seek = getBlockTypeFilter(control);
-	        if (seek != null)
+	        //if (seek != null)
 	       // MyAPIGateway.Utilities.ShowNotification(block.CustomName+" check "+control.Id+" > looking for '"+seek+"', have '"+type);
 	        return seek == null || type == seek;
 		}
