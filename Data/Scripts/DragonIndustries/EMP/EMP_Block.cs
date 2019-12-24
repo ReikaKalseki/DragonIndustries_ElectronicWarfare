@@ -27,12 +27,23 @@ using SavedTimedBlock = DragonIndustries.SavedTimedBlock;
 using IO = DragonIndustries.IO;
 using Configuration = DragonIndustries.Configuration;
 using FX = DragonIndustries.FX;
+using IMyUpgradeModule = Sandbox.ModAPI.IMyUpgradeModule;
+
+using Sandbox.ModAPI.Interfaces.Terminal;
 
 namespace DragonIndustries {
     
 	[MyEntityComponentDescriptor(typeof(MyObjectBuilder_UpgradeModule), false, "EMP_Large", "EMP_Small")]
 	
     public class EMP : LogicCore {
+
+        public enum EMPStates {
+            OFFLINE,
+            CHARGING,
+            READY,
+            FIRING,
+            COOLDOWN
+        };
 		
 		public static readonly List<SavedTimedBlock> blockReactivations = new List<SavedTimedBlock>();
 		
@@ -40,13 +51,16 @@ namespace DragonIndustries {
         private BoundingBoxD scanArea;
 		private float distanceMultiplier;
 		
-		private const int CHARGING_TIME = 10; //in seconds
-		private const int FIRE_DELAY = 4; //in 100t cycles
-		private const int MAX_FIRE_COUNT = 25; //in 100t cycles
+		private const int CHARGING_TIME = 9;//10; //in 100t cycles, = 15s
+		private const int COOLDOWN_TIME = 36;//10; //in 100t cycles, = 1min
+		private const int MAX_FIRE_COUNT = 25;
 		
-		public int cyclesOn = 0;
-		public int cyclesUntilFire = FIRE_DELAY;
-		public bool readyToFire = false;
+		public EMPStates state = EMPStates.OFFLINE;
+		private EMPStates lastState = EMPStates.OFFLINE;
+		
+		private int chargingCycles = 0;
+		private int cooldownCycles = 0;
+		
 		private int fireCount = 0;
 		public int currentEmissive;
 		
@@ -63,8 +77,6 @@ namespace DragonIndustries {
 			if (thisGrid.GridSizeEnum == MyCubeSize.Large) {
 				distanceMultiplier = thisGrid.IsStatic ? 20 : 4;
 			}
-			
-			//Configuration.load();
             
 			double maxd = 0;
 			foreach (var entry in Configuration.reactionMap) {
@@ -75,10 +87,6 @@ namespace DragonIndustries {
             double d = maxd*distanceMultiplier;
             scanRange = new BoundingBoxD(new Vector3D(-d, -d, -d), new Vector3D(d, d, d));
         }
-        
-        //public override void UpdateAfterSimulation() {
-        //	FX.renderLineFX();
-        //}
 		
 		/*
 		private bool isEMPerConnected() {
@@ -100,7 +108,7 @@ namespace DragonIndustries {
 		*/
 
         protected override bool shouldUsePower() {
-			return (thisBlock.Enabled || readyToFire) && thisBlock.IsFunctional;
+			return (state == EMPStates.CHARGING || state == EMPStates.READY || state == EMPStates.FIRING) && thisBlock.IsFunctional;
         }
 		
 		private void damageOnlineShip() {
@@ -120,19 +128,6 @@ namespace DragonIndustries {
 			return block.IsWorking && block.Enabled;
 		}
 		
-		public override void UpdateAfterSimulation10() {
-			base.UpdateAfterSimulation10();
-			
-			if (cyclesOn > 0) {
-				thisBlock.ApplyAction("OnOff_On"); //force to keep on once charging begins
-				
-				cycleChargeColors();
-			}
-			if (readyToFire && cyclesUntilFire <= 0) {
-				fireEMP();
-			}
-		}
-		
 		private void cycleChargeColors() {
 			int band = currentEmissive%4;
 			int index = currentEmissive/4;
@@ -148,35 +143,53 @@ namespace DragonIndustries {
 				index++;
 			}
 		}
+		
+		public override void UpdateAfterSimulation10() {
+			base.UpdateAfterSimulation10();
+			if (state == EMPStates.FIRING) {
+				fireEMP();
+			}
+			applyState();
+		}
         
         public override void UpdateAfterSimulation100() {
 			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
-			if (cyclesOn > 0 || (thisBlock.IsWorking && thisBlock.Enabled)) {
-				cyclesOn++;
-				thisBlock.ApplyAction("OnOff_On"); //force to keep on once charging begins
-				if (readyToFire) {
-					FX.EMPFX.chargingFX(this, false, true, false);
-				}
-				else {
-					readyToFire = cyclesOn >= CHARGING_TIME*3/5F; //each 5 seconds is 3 cycles
-					if (readyToFire) {
-						NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
-						//MyAPIGateway.Utilities.ShowNotification("Activated EMP", 5000, MyFontEnum.Red);
-						FX.EMPFX.chargingFX(this, false, true, true);
-					}
-					else {
-						FX.EMPFX.chargingFX(this, cyclesOn == 1, false, false);
-					}
-				}
-            }
-			else {
-				//cyclesOn = 0;
-				setEmissiveChannel(0, Color.Black, 0);
-			}
 			
-			if (readyToFire) {
-				cyclesUntilFire--;
+			if ((!thisBlock.IsWorking || !thisBlock.Enabled) && state != EMPStates.COOLDOWN) {
+				state = EMPStates.OFFLINE;
 			}
+			switch (state) {
+				case EMPStates.CHARGING:
+					chargingCycles++;
+					cycleChargeColors();
+					if (chargingCycles >= CHARGING_TIME) {
+						state = EMPStates.READY;
+					}
+				break;
+				case EMPStates.FIRING:
+				
+				break;
+				case EMPStates.OFFLINE:
+					if (thisBlock.Enabled) {
+						state = EMPStates.CHARGING;
+					}
+				break;
+				case EMPStates.COOLDOWN:
+					cooldownCycles++;
+					if (cooldownCycles >= COOLDOWN_TIME) {
+						state = EMPStates.OFFLINE;
+					}
+				break;
+			}
+			applyState();
+			
+			bool changedState = lastState != state;
+			
+			FX.EMPFX.ambientFX(this, state == EMPStates.READY, state == EMPStates.COOLDOWN);
+			if (state == EMPStates.CHARGING)
+				FX.EMPFX.chargingFX(this, changedState);
+			
+			lastState = state;
 			
 			for (int i = blockReactivations.Count - 1; i >= 0; i--) {
 				SavedTimedBlock entry = blockReactivations[i];
@@ -203,17 +216,37 @@ namespace DragonIndustries {
 				fireCount++;
 				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
 				if (end) { //one-time "fire" action
-					thisBlock.ApplyAction("OnOff_Off"); //to help in case was accidentally left on even though power was cut
-					readyToFire = false;
-					cyclesUntilFire = FIRE_DELAY;
-					setEmissiveChannel(0, Color.Black, 0);
-					cyclesOn = 0;
-					fireCount = 0;
+					 //to help in case was accidentally left on even though power was cut
+					state = EMPStates.COOLDOWN;
 					//MyAPIGateway.Utilities.ShowNotification("Finished firing EMP", 5000, MyFontEnum.Red);
-					NeedsUpdate &= ~MyEntityUpdateEnum.EACH_10TH_FRAME;
 					//NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
 				}
 			//}
+		}
+		
+		private void applyState() {
+			NeedsUpdate &= ~MyEntityUpdateEnum.EACH_10TH_FRAME;
+			switch(state) {
+				case EMPStates.FIRING:
+					NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
+					thisBlock.ApplyAction("OnOff_On");
+					cooldownCycles = 0;
+				break;
+				case EMPStates.COOLDOWN:
+					thisBlock.ApplyAction("OnOff_Off");
+					setEmissiveChannel(0, Color.Black, 0);
+					chargingCycles = 0;
+					fireCount = 0;
+				break;
+				case EMPStates.OFFLINE:
+					setEmissiveChannel(0, Color.Black, 0);
+					chargingCycles = 0;
+					cooldownCycles = 0;
+				break;
+				case EMPStates.CHARGING:
+				
+				break;
+			}
 		}
 
         private bool affectEnemyBlocks() {	
@@ -331,6 +364,47 @@ namespace DragonIndustries {
 			}
 			return true;
 		}
+		
+		public void startFiring() {
+			if (state != EMPStates.READY) {
+				return;
+			}
+			state = EMPStates.FIRING;
+		}
+        
+        protected override void doGuiInit() {
+            Action<IMyTerminalBlock> fire = block => { if (block.GameLogic.GetAs<EMP>() != null) block.GameLogic.GetAs<EMP>().startFiring(); };
+            string desc = "Fires the EMP. Be careful about destroying your own ship or blocks!";
+            new ControlButton<IMyUpgradeModule, EMP>(this, "fire", "Fire", desc, fire).register();
+            handleStateValidity();
+        }
+
+        private bool isReadyToFire(IMyTerminalBlock block) {
+			return block is EMP && (block as EMP).state == EMPStates.READY;
+        }
+		
+		private void handleStateValidity() {
+            try {
+	            List<IMyTerminalAction> actions = new List<IMyTerminalAction>();
+	            MyAPIGateway.TerminalControls.GetActions<IMyUpgradeModule>(out actions);
+	            foreach (IMyTerminalAction action in actions) {
+            		//IO.log("Checking action '"+action.Id);
+	            	if (action.Id.ToString() == "fire")
+	            		action.Enabled = isReadyToFire;
+	            }
+	
+	            List<IMyTerminalControl> controls = new List<IMyTerminalControl>();
+            	MyAPIGateway.TerminalControls.GetControls<IMyUpgradeModule>(out controls);
+	            foreach (IMyTerminalControl action in controls) {
+            		//IO.log("Checking control '"+action.Id);
+	            	if (action.Id.ToString() == "fire")
+	            		action.Enabled = isReadyToFire;
+	            }
+            }
+            catch (Exception e) {
+            	IO.log(e.ToString());
+            }
+        }
         
     }
 }

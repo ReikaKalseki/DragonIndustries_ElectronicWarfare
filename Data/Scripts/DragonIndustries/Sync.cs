@@ -112,9 +112,7 @@ namespace DragonIndustries {
                 EMP logic = entity.GameLogic.GetAs<EMP>();
                 if (logic != null) {
                 	logic.currentEmissive = p.readInt();
-                	logic.cyclesOn = p.readInt();
-                	logic.cyclesUntilFire = p.readInt();
-                	logic.readyToFire = p.readBoolean();
+                	logic.state = (EMP.EMPStates)p.readInt();
                 }
                 else {
                    IO.log("EMP logic did not exist on client to process sync packet!");
@@ -213,9 +211,7 @@ namespace DragonIndustries {
         private static void sendEMPData(Packet p, EMP b) {
             try {        	
                 p.writeInt(b.currentEmissive);
-                p.writeInt(b.cyclesOn);
-                p.writeInt(b.cyclesUntilFire);
-                p.writeBoolean(b.readyToFire);        		
+            	p.writeInt((int)b.state); 		
             }
             catch (Exception e) {
                 IO.log("Threw exception while dispatching EMP packet: "+e.ToString());

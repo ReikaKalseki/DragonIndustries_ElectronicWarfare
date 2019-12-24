@@ -42,7 +42,7 @@ namespace DragonIndustries {
         private string[] emissiveNames;
         
         protected void doSetup(string powerPriority, float maxPowerInMW, params MyEntityUpdateEnum[] updateCycles) {
-        	this(powerPriority, maxPowerInMW, maxPowerInMW, updateCycles);
+        	doSetup(powerPriority, maxPowerInMW, maxPowerInMW, updateCycles);
         }
         
         protected void doSetup(string powerPriority, float smallGridMW, float largeGridMW, params MyEntityUpdateEnum[] updateCycles) {
