@@ -42,6 +42,10 @@ namespace DragonIndustries {
         private string[] emissiveNames;
         
         protected void doSetup(string powerPriority, float maxPowerInMW, params MyEntityUpdateEnum[] updateCycles) {
+        	this(powerPriority, maxPowerInMW, maxPowerInMW, updateCycles);
+        }
+        
+        protected void doSetup(string powerPriority, float smallGridMW, float largeGridMW, params MyEntityUpdateEnum[] updateCycles) {
 			NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
             Entity.NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
@@ -63,7 +67,7 @@ namespace DragonIndustries {
 			Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
 			
             energySink = new MyResourceSinkComponent(1);
-            energySink.Init(MyStringHash.GetOrCompute(powerPriority), maxPowerInMW, calcRequiredPower);
+            energySink.Init(MyStringHash.GetOrCompute(powerPriority), thisGrid.GridSizeEnum == MyCubeSize.Small ? smallGridMW : largeGridMW, calcRequiredPower);
             if (thisBlock.Components.Contains(typeof(MyResourceSinkComponent))) {
               	IO.log("Power sinks already present in "+this+" #"+Entity.EntityId+":");
               	List<MyResourceSinkComponent> li = new List<MyResourceSinkComponent>();

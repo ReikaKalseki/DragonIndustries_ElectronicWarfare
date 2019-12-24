@@ -34,7 +34,7 @@ namespace DragonIndustries {
 	
     public class EMP : LogicCore {
 		
-        public static List<SavedTimedBlock> blockReactivations;
+		public static readonly List<SavedTimedBlock> blockReactivations = new List<SavedTimedBlock>();
 		
         private BoundingBoxD scanRange;
         private BoundingBoxD scanArea;
@@ -55,7 +55,7 @@ namespace DragonIndustries {
 		private static readonly Color[] colorCycleC = {new Color(8, 0, 153), new Color(0, 58, 204), new Color(0, 142, 230), new Color(34, 170, 255), new Color(102, 196, 255), new Color(153, 216, 255), new Color(204, 235, 255)};
 
 		public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
-			doSetup("Utility", 3, MyEntityUpdateEnum.EACH_100TH_FRAME);
+			doSetup("Utility", 6, 60, MyEntityUpdateEnum.EACH_100TH_FRAME);
 			prepareEmissives("ColorBand", 4);
 		
 			distanceMultiplier = 1;
@@ -63,8 +63,6 @@ namespace DragonIndustries {
 			if (thisGrid.GridSizeEnum == MyCubeSize.Large) {
 				distanceMultiplier = thisGrid.IsStatic ? 20 : 4;
 			}
-			
-			blockReactivations = new List<SavedTimedBlock>();
 			
 			//Configuration.load();
             
@@ -198,12 +196,13 @@ namespace DragonIndustries {
 			//if (connected) {
 				bool doneFiring = affectEnemyBlocks();
 				//NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
-				FX.EMPFX.fireFX(this, doneFiring, rand);
+				bool end = doneFiring || fireCount >= MAX_FIRE_COUNT;
+				FX.EMPFX.fireFX(this, end, rand);
 				if (Configuration.getSetting(Settings.SELFDAMAGE).asBoolean())
 					damageOnlineShip();
 				fireCount++;
 				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
-				if (doneFiring || fireCount >= MAX_FIRE_COUNT) { //one-time "fire" action
+				if (end) { //one-time "fire" action
 					thisBlock.ApplyAction("OnOff_Off"); //to help in case was accidentally left on even though power was cut
 					readyToFire = false;
 					cyclesUntilFire = FIRE_DELAY;
@@ -258,7 +257,7 @@ namespace DragonIndustries {
 												inRange = distance < d;
 											}
 											if (inRange) {
-												done &= empBlock(slim, block, distance, share, reaction, false, false);
+												done &= empBlock(slim, block, distance, share, reaction, !(block is IMyFunctionalBlock), false);
 											}
 											else {
 												//MyAPIGateway.Utilities.ShowNotification("Not EMPing block "+block.CustomName+" @ "+distance+"; out of range", 5000, MyFontEnum.Red);
@@ -282,22 +281,29 @@ namespace DragonIndustries {
         }
 		
 		private bool empBlock(IMySlimBlock slimBlock, IMyTerminalBlock block, double distance, bool sameGrid, EMPReaction reaction, bool forceDamage, bool forceDestroy) {
+			/*
+			if (reaction == null) {
+				MyAPIGateway.Utilities.ShowNotification("Block "+block.CustomName+" pulled null reaction?!", 5000, MyFontEnum.Red);
+				return false;
+			}
+			if (slimBlock == null) {
+				MyAPIGateway.Utilities.ShowNotification("Block "+block.CustomName+" has null slimblock?!", 5000, MyFontEnum.Red);
+				return false;
+			}
+			if (block == null) {
+				MyAPIGateway.Utilities.ShowNotification("Block "+slimBlock.BlockDefinition+" has null terminal block?!", 5000, MyFontEnum.Red);
+				return false;
+			}*/
 			try {
 				bool disabled = false;
 				if ((slimBlock is IMyDestroyableObject) && (forceDamage || rand.Next(5) == 0)) {
-					IMyDestroyableObject obj = slimBlock as IMyDestroyableObject;
-					if (obj != null) {
-						float damage = forceDestroy ? obj.Integrity*rand.Next(60, 90)/100F : Math.Max(1, 9+2*(float)rand.Next(1, 3)-((float)distance/6F));
-						if (slimBlock.DamageRatio > 0.5F)
-							obj.DoDamage(damage, MyDamageType.Weapon, true);
-						block.UpdateIsWorking();
-						disabled = !block.IsWorking || !block.IsFunctional;
-					}
-					//MyAPIGateway.Utilities.ShowNotification("EMP'd (damage) block "+block.CustomName+" @ "+distance, 5000, MyFontEnum.Red);
+					disabled = damageBlock(slimBlock, block, distance, forceDestroy);
 				}
 				else {
-					block.ApplyAction("OnOff_Off");
-					block.UpdateIsWorking();
+					IMyFunctionalBlock func = block as IMyFunctionalBlock;
+					//func.ApplyAction("OnOff_Off");
+					func.Enabled = false;
+					func.UpdateIsWorking();
 					//MyAPIGateway.Utilities.ShowNotification("EMP'd (on/off) block "+block.CustomName+" @ "+distance, 5000, MyFontEnum.Red);
 					disabled = true; //always successfully handled in the first cycle
 				}
@@ -307,10 +313,23 @@ namespace DragonIndustries {
 				return disabled;
 			}
 			catch (Exception ex) {
-				//MyAPIGateway.Utilities.ShowNotification("Could not EMP block "+block.CustomName+": "+ex.ToString(), 5000, MyFontEnum.Red);
+				MyAPIGateway.Utilities.ShowNotification("Could not EMP block "+block.CustomName+": "+ex.ToString(), 5000, MyFontEnum.Red);
 				IO.log("Threw exception EMPing block "+block.CustomName+": "+ex.ToString());
 				return true; //shut down to avoid constantly throwing exceptions
 			}
+		}
+		
+		private bool damageBlock(IMySlimBlock slimBlock, IMyTerminalBlock block, double distance, bool forceDestroy) {
+			IMyDestroyableObject obj = slimBlock as IMyDestroyableObject;
+			if (obj != null) {
+				float damage = forceDestroy ? obj.Integrity*rand.Next(60, 90)/100F : Math.Max(1, 9+2*(float)rand.Next(1, 3)-((float)distance/6F));
+				if (slimBlock.DamageRatio > 0.5F)
+					obj.DoDamage(damage, MyDamageType.Weapon, true);
+				block.UpdateIsWorking();
+				//MyAPIGateway.Utilities.ShowNotification("EMP'd (damage) block "+block.CustomName+" @ "+distance, 5000, MyFontEnum.Red);
+				return !block.IsWorking || !block.IsFunctional;
+			}
+			return true;
 		}
         
     }

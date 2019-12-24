@@ -164,6 +164,9 @@ namespace DragonIndustries
         	if (block is IMyGasTank) {
         		return BlocksToFind.CARGO;
         	}
+        	if (block is IMyWarhead) {
+        		return BlocksToFind.WARHEAD;
+        	}
         	return BlocksToFind.NONE;
         }
     	
@@ -173,6 +176,7 @@ namespace DragonIndustries
     		POWER, //batteries, solar, reactors
     		PROGRAM, //programmable blocks, timers
     		CARGO,
+    		WARHEAD,
     		NONE
     	};
     }

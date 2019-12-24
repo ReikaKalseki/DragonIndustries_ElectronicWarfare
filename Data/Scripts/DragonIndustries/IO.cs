@@ -92,7 +92,10 @@ namespace DragonIndustries {
 					TextReader reader = MyAPIGateway.Utilities.ReadFileInWorldStorage("blocks_to_reactivate_"+world+".cfg", typeof(SavedTimedBlock));
 					string xmlText = reader.ReadToEnd();
 					reader.Close();
-                    EMP.blockReactivations = MyAPIGateway.Utilities.SerializeFromXML<List<SavedTimedBlock>>(xmlText);
+                    List<SavedTimedBlock> li = MyAPIGateway.Utilities.SerializeFromXML<List<SavedTimedBlock>>(xmlText);
+                    if (li != null) {
+                    	EMP.blockReactivations.AddList(li);
+                    }
                 }
         		IO.log("Loaded reactivation list. Data = "+toUsefulString(EMP.blockReactivations));
 			}

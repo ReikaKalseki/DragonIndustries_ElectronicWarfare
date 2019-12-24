@@ -31,7 +31,7 @@ namespace DragonIndustries {
         public static readonly Dictionary<string, EMPReaction> reactionMap = new Dictionary<string, EMPReaction>();
         public static readonly Dictionary<string, HackingDifficulty> hackMap = new Dictionary<string, HackingDifficulty>();
         
-		private static readonly EMPReaction defaultReaction = new EMPReaction("default", 0, 20); //generic fallback for ones without hardcoded resistances or reactions
+		private static readonly EMPReaction defaultReaction = new EMPReaction("default", 0, 25); //generic fallback for ones without hardcoded resistances or reactions
 		private static readonly HackingDifficulty defaultDifficulty = new HackingDifficulty("default", 1, 1); //generic fallback for ones without hardcoded resistances or reactions
 		
 		public static void load() {
