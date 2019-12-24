@@ -61,6 +61,7 @@ namespace DragonIndustries {
 		private int chargingCycles = 0;
 		private int cooldownCycles = 0;
 		
+		private int fireCountdown = 10;
 		private int fireCount = 0;
 		public int currentEmissive;
 		
@@ -69,7 +70,7 @@ namespace DragonIndustries {
 		private static readonly Color[] colorCycleC = {new Color(8, 0, 153), new Color(0, 58, 204), new Color(0, 142, 230), new Color(34, 170, 255), new Color(102, 196, 255), new Color(153, 216, 255), new Color(204, 235, 255)};
 
 		public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
-			doSetup("Utility", 6, 60, MyEntityUpdateEnum.EACH_100TH_FRAME);
+			doSetup("Utility", 6, 60, MyEntityUpdateEnum.EACH_100TH_FRAME, MyEntityUpdateEnum.EACH_10TH_FRAME);
 			prepareEmissives("ColorBand", 4);
 		
 			distanceMultiplier = 1;
@@ -143,22 +144,32 @@ namespace DragonIndustries {
 				index++;
 			}
 		}
+        
+        protected override void onEnergyLoss() {
+			if (state == EMPStates.CHARGING || state == EMPStates.READY)
+        		setState(EMPStates.OFFLINE);
+			//MyAPIGateway.Utilities.ShowNotification("Energy loss in state "+state, 1000, MyFontEnum.Red);
+        }
 		
 		public override void UpdateAfterSimulation10() {
 			base.UpdateAfterSimulation10();
-			if (state == EMPStates.FIRING) {
-				fireEMP();
-			}
-			applyState();
-		}
-        
-        public override void UpdateAfterSimulation100() {
-			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
-			
 			thisBlock.UpdateIsWorking();
 			if ((!thisBlock.IsWorking || !thisBlock.Enabled) && state != EMPStates.COOLDOWN) {
 				setState(EMPStates.OFFLINE);
 			}
+			if (thisBlock.IsWorking && thisBlock.Enabled && state == EMPStates.OFFLINE) {
+				setState(EMPStates.CHARGING);
+			}
+			if (state == EMPStates.FIRING && fireCountdown == 0) {
+				fireEMP();
+			}
+			applyState();
+			//MyAPIGateway.Utilities.ShowNotification("Run tick 10, block enabled: "+thisBlock.IsWorking+", state is "+state, 1000, MyFontEnum.Red);
+		}
+        
+        public override void UpdateAfterSimulation100() {
+			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
+
 			switch (state) {
 				case EMPStates.CHARGING:
 					chargingCycles++;
@@ -168,12 +179,9 @@ namespace DragonIndustries {
 					}
 				break;
 				case EMPStates.FIRING:
+					if (fireCountdown > 0)
+						fireCountdown--;
 					getSounds().playSound("ShipJumpDriveJumpOut", 30, 4);
-				break;
-				case EMPStates.OFFLINE:
-					if (thisBlock.Enabled) {
-						setState(EMPStates.CHARGING);
-					}
 				break;
 				case EMPStates.COOLDOWN:
 					cooldownCycles++;
@@ -182,7 +190,6 @@ namespace DragonIndustries {
 					}
 				break;
 			}
-			applyState();
 			
 			FX.EMPFX.ambientFX(this);
 			
@@ -210,16 +217,16 @@ namespace DragonIndustries {
 		private void applyStateChange() {
 			switch(state) {
 				case EMPStates.OFFLINE:
-					getSounds().playSound("ArcBlockProjectHologramEnd", 30, 2);
+					getSounds().playSound("ArcImpMetalSand", 30, 2); //NOTE: "loop part" sounds do not work
 				break;
 				case EMPStates.CHARGING:
-					getSounds().playSound("ShipJumpDriveCharging", 30, 2);
-					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
+					getSounds().playSound("ShipJumpDriveRecharge", 30, 5);
 				break;
 				case EMPStates.READY:
-					getSounds().playSound("ArcDroneMediumEnd", 30, 2);
+					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
 				break;
 				case EMPStates.FIRING:
+					fireCountdown = 10;
 				break;
 				case EMPStates.COOLDOWN:
 					cooldownCycles = 0;
@@ -229,26 +236,23 @@ namespace DragonIndustries {
 				case EMPStates.OFFLINE:
 				break;
 				case EMPStates.CHARGING:
-					getSounds().stopSound("ShipJumpDriveCharging");
-					getSounds().stopSound("ArcDroneLoopSmall");
+					getSounds().stopSound("ShipJumpDriveRecharge");
 				break;
 				case EMPStates.READY:
-					getSounds().stopSound("ArcDroneMediumEnd");
+					getSounds().stopSound("ArcDroneLoopSmall");
 				break;
 				case EMPStates.FIRING:
 					FX.EMPFX.onDoneFiringFX(this, rand);
 				break;
 				case EMPStates.COOLDOWN:
-					getSounds().playSound("ArcBlockPistonEnd", 30, 2);
+					getSounds().playSound("ArcEventAirVent", 30, 2);
 				break;
 			}
 		}
 		
 		private void applyState() {
-			NeedsUpdate &= ~MyEntityUpdateEnum.EACH_10TH_FRAME;
 			switch(state) {
 				case EMPStates.FIRING:
-					NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
 					thisBlock.ApplyAction("OnOff_On");
 					cooldownCycles = 0;
 				break;
@@ -283,7 +287,7 @@ namespace DragonIndustries {
 				fireCount++;
 				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
 				if (end) { //one-time "fire" action
-					state = EMPStates.COOLDOWN;
+					setState(EMPStates.COOLDOWN);
 					//MyAPIGateway.Utilities.ShowNotification("Finished firing EMP", 5000, MyFontEnum.Red);
 					//NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
 				}
@@ -306,14 +310,14 @@ namespace DragonIndustries {
 					try {
 						if (entity is IMyCubeGrid) {
 							IMyCubeGrid grid = entity as IMyCubeGrid;
-							gridBlocks.Clear();
-							grid.GetBlocks(gridBlocks, b => b.FatBlock is IMyTerminalBlock && (b.FatBlock as IMyTerminalBlock).IsWorking);
-							//MyAPIGateway.Utilities.ShowNotification("Found grid #"+i+" named "+grid.Name+" & "+grid.GetFriendlyName()+", ID="+grid.EntityId+"; size = "+grid.GridSizeEnum+", owners = "+grid.SmallOwners.ToString()+", grid elements = "+gridBlocks.ToString(), 5000, MyFontEnum.Red);
-							foreach (IMySlimBlock slim in gridBlocks) {
-								IMyTerminalBlock block = slim.FatBlock as IMyTerminalBlock;
-								EMPReaction reaction = Configuration.getEMPReaction(block);
-								if (reaction != null) {
-									if (block.GetUserRelationToOwner(thisBlock.OwnerId) == MyRelationsBetweenPlayerAndBlock.Enemies) {
+							if (isEnemyGrid(grid)) {
+								gridBlocks.Clear();
+								grid.GetBlocks(gridBlocks, b => b.FatBlock is IMyTerminalBlock && (b.FatBlock as IMyTerminalBlock).IsWorking && isEnemyBlock(b.FatBlock));
+								//MyAPIGateway.Utilities.ShowNotification("Found grid #"+i+" named "+grid.Name+" & "+grid.GetFriendlyName()+", ID="+grid.EntityId+"; size = "+grid.GridSizeEnum+", owners = "+grid.SmallOwners.ToString()+", grid elements = "+gridBlocks.ToString(), 5000, MyFontEnum.Red);
+								foreach (IMySlimBlock slim in gridBlocks) {
+									IMyTerminalBlock block = slim.FatBlock as IMyTerminalBlock;
+									EMPReaction reaction = Configuration.getEMPReaction(block);
+									if (reaction != null) {
 										bool share = thisGrid == grid;
 										if (rand.Next(100) >= (share ? reaction.ResistanceSameGrid : reaction.Resistance)) {
 											bool inRange = reaction.InfRangeSharedGrid;

@@ -195,6 +195,18 @@ namespace DragonIndustries {
         	
         }
         
+        protected bool isEnemyGrid(IMyCubeGrid grid) {
+        	foreach (long id in grid.BigOwners) {
+        		if (thisBlock.GetUserRelationToOwner(id) == MyRelationsBetweenPlayerAndBlock.Enemies)
+        			return true;
+        	}
+        	return false;
+        }
+        
+        protected bool isEnemyBlock(IMyCubeBlock block) {
+        	return thisBlock.GetUserRelationToOwner(block.OwnerId) == MyRelationsBetweenPlayerAndBlock.Enemies;
+        }
+        
         protected List<IMyCubeGrid> getOwnChildGrids(bool recurse = true) {
         	return getChildGridsOf(thisGrid);
         }
