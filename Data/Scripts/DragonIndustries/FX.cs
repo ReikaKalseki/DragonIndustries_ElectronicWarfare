@@ -32,7 +32,12 @@ namespace DragonIndustries {
 		public static class EMPFX {
 			
 			public static void ambientFX(EMP emp) {
-				
+				switch(emp.state) {
+					case EMP.EMPStates.FIRING:
+						emp.getSounds().playSound("ArcBlockAssemblerEnd", 30, 2);
+						emp.getSounds().playSound("ArcBlockProjectHologramEnd", 30, 2);
+					break;
+				}
 			}
 			
 			public static void onDoneFiringFX(EMP emp, Random rand) {

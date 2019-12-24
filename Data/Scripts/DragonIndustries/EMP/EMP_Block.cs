@@ -155,6 +155,7 @@ namespace DragonIndustries {
         public override void UpdateAfterSimulation100() {
 			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
 			
+			thisBlock.UpdateIsWorking();
 			if ((!thisBlock.IsWorking || !thisBlock.Enabled) && state != EMPStates.COOLDOWN) {
 				setState(EMPStates.OFFLINE);
 			}
@@ -200,6 +201,7 @@ namespace DragonIndustries {
 			state = s;
 			bool changed = lastState != state;
 			if (changed) {
+				MyAPIGateway.Utilities.ShowNotification("Changing state from "+lastState+" to "+state, 5000, MyFontEnum.Red);
 				applyStateChange();
 			}
 			return changed;
@@ -208,24 +210,36 @@ namespace DragonIndustries {
 		private void applyStateChange() {
 			switch(state) {
 				case EMPStates.OFFLINE:
-					getSounds().stopSound("BlockAssemblerEnd");
-					getSounds().stopSound("BlockProjectHologramEnd");
+					getSounds().playSound("ArcBlockProjectHologramEnd", 30, 2);
 				break;
 				case EMPStates.CHARGING:
 					getSounds().playSound("ShipJumpDriveCharging", 30, 2);
 					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
 				break;
 				case EMPStates.READY:
-					getSounds().stopSound("ShipJumpDriveCharging");
+					getSounds().playSound("ArcDroneMediumEnd", 30, 2);
 				break;
 				case EMPStates.FIRING:
-					getSounds().stopSound("ArcDroneLoopSmall");
-					getSounds().playSound("BlockAssemblerEnd", 30, 2);
-					getSounds().playSound("BlockProjectHologramEnd", 30, 2);
 				break;
 				case EMPStates.COOLDOWN:
-					FX.EMPFX.onDoneFiringFX(this, rand);
 					cooldownCycles = 0;
+				break;
+			}
+			switch(lastState) {
+				case EMPStates.OFFLINE:
+				break;
+				case EMPStates.CHARGING:
+					getSounds().stopSound("ShipJumpDriveCharging");
+					getSounds().stopSound("ArcDroneLoopSmall");
+				break;
+				case EMPStates.READY:
+					getSounds().stopSound("ArcDroneMediumEnd");
+				break;
+				case EMPStates.FIRING:
+					FX.EMPFX.onDoneFiringFX(this, rand);
+				break;
+				case EMPStates.COOLDOWN:
+					getSounds().playSound("ArcBlockPistonEnd", 30, 2);
 				break;
 			}
 		}
@@ -396,7 +410,7 @@ namespace DragonIndustries {
 			if (state != EMPStates.READY) {
 				return;
 			}
-			state = EMPStates.FIRING;
+			setState(EMPStates.FIRING);
 		}
         
         protected override void doGuiInit() {
