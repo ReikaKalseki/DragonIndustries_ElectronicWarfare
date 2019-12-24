@@ -34,15 +34,13 @@ namespace DragonIndustries {
 			public static void ambientFX(EMP emp) {
 				switch(emp.state) {
 					case EMP.EMPStates.FIRING:
-						emp.getSounds().playSound("ArcBlockAssemblerEnd", 30, 2);
-						emp.getSounds().playSound("ArcBlockProjectHologramEnd", 30, 2);
+						emp.getSounds().playSound("ArcWepTurretMissileShotDistA", 30, 2);
 					break;
 				}
 			}
 			
 			public static void onDoneFiringFX(EMP emp, Random rand) {
 				emp.getSounds().playSound("ArcBlockEject", 30, 4);
-				emp.getSounds().stopSound("ArcDroneLoopSmall");
 				
 				
 				/*

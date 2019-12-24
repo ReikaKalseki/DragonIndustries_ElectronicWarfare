@@ -179,8 +179,10 @@ namespace DragonIndustries {
 					}
 				break;
 				case EMPStates.FIRING:
-					if (fireCountdown > 0)
+					if (fireCountdown > 0) {
 						fireCountdown--;
+						MyAPIGateway.Utilities.ShowNotification("EMP firing in "+fireCountdown+" seconds!", 1500, MyFontEnum.Blue);
+					}
 					getSounds().playSound("ShipJumpDriveJumpOut", 30, 4);
 				break;
 				case EMPStates.COOLDOWN:
@@ -208,7 +210,7 @@ namespace DragonIndustries {
 			state = s;
 			bool changed = lastState != state;
 			if (changed) {
-				MyAPIGateway.Utilities.ShowNotification("Changing state from "+lastState+" to "+state, 5000, MyFontEnum.Red);
+				//MyAPIGateway.Utilities.ShowNotification("Changing state from "+lastState+" to "+state, 5000, MyFontEnum.Red);
 				applyStateChange();
 			}
 			return changed;
@@ -224,9 +226,11 @@ namespace DragonIndustries {
 				break;
 				case EMPStates.READY:
 					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
+					MyAPIGateway.Utilities.ShowNotification("EMP ready to fire!", 1500, MyFontEnum.Blue);
 				break;
 				case EMPStates.FIRING:
 					fireCountdown = 10;
+					fireCount = 0;
 				break;
 				case EMPStates.COOLDOWN:
 					cooldownCycles = 0;
@@ -260,7 +264,6 @@ namespace DragonIndustries {
 					thisBlock.ApplyAction("OnOff_Off");
 					setEmissiveChannel(0, Color.Black, 0);
 					chargingCycles = 0;
-					fireCount = 0;
 				break;
 				case EMPStates.OFFLINE:
 					setEmissiveChannel(0, Color.Black, 0);
@@ -285,7 +288,7 @@ namespace DragonIndustries {
 				if (Configuration.getSetting(Settings.SELFDAMAGE).asBoolean())
 					damageOnlineShip();
 				fireCount++;
-				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
+				MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 500, MyFontEnum.Red);
 				if (end) { //one-time "fire" action
 					setState(EMPStates.COOLDOWN);
 					//MyAPIGateway.Utilities.ShowNotification("Finished firing EMP", 5000, MyFontEnum.Red);
