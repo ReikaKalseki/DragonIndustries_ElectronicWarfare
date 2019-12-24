@@ -156,40 +156,34 @@ namespace DragonIndustries {
 			//MyAPIGateway.Utilities.ShowNotification("Run tick, block enabled: "+thisBlock.IsWorking, 1000, MyFontEnum.Red);
 			
 			if ((!thisBlock.IsWorking || !thisBlock.Enabled) && state != EMPStates.COOLDOWN) {
-				state = EMPStates.OFFLINE;
+				setState(EMPStates.OFFLINE);
 			}
 			switch (state) {
 				case EMPStates.CHARGING:
 					chargingCycles++;
 					cycleChargeColors();
 					if (chargingCycles >= CHARGING_TIME) {
-						state = EMPStates.READY;
+						setState(EMPStates.READY);
 					}
 				break;
 				case EMPStates.FIRING:
-				
+					getSounds().playSound("ShipJumpDriveJumpOut", 30, 4);
 				break;
 				case EMPStates.OFFLINE:
 					if (thisBlock.Enabled) {
-						state = EMPStates.CHARGING;
+						setState(EMPStates.CHARGING);
 					}
 				break;
 				case EMPStates.COOLDOWN:
 					cooldownCycles++;
 					if (cooldownCycles >= COOLDOWN_TIME) {
-						state = EMPStates.OFFLINE;
+						setState(EMPStates.OFFLINE);
 					}
 				break;
 			}
 			applyState();
 			
-			bool changedState = lastState != state;
-			
-			FX.EMPFX.ambientFX(this, state == EMPStates.READY, state == EMPStates.COOLDOWN);
-			if (state == EMPStates.CHARGING)
-				FX.EMPFX.chargingFX(this, changedState);
-			
-			lastState = state;
+			FX.EMPFX.ambientFX(this);
 			
 			for (int i = blockReactivations.Count - 1; i >= 0; i--) {
 				SavedTimedBlock entry = blockReactivations[i];
@@ -201,27 +195,39 @@ namespace DragonIndustries {
 			}
         }
 		
-		private void fireEMP() {
-			//bool connected = isEMPerConnected();
-			
-			//MyAPIGateway.Utilities.ShowNotification("Block enabled, can run: "+connected);    
-			//IO.debug();
-			//if (connected) {
-				bool doneFiring = affectEnemyBlocks();
-				//NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
-				bool end = doneFiring || fireCount >= MAX_FIRE_COUNT;
-				FX.EMPFX.fireFX(this, end, rand);
-				if (Configuration.getSetting(Settings.SELFDAMAGE).asBoolean())
-					damageOnlineShip();
-				fireCount++;
-				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
-				if (end) { //one-time "fire" action
-					 //to help in case was accidentally left on even though power was cut
-					state = EMPStates.COOLDOWN;
-					//MyAPIGateway.Utilities.ShowNotification("Finished firing EMP", 5000, MyFontEnum.Red);
-					//NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
-				}
-			//}
+		private bool setState(EMPStates s) {
+			lastState = state;
+			state = s;
+			bool changed = lastState != state;
+			if (changed) {
+				applyStateChange();
+			}
+			return changed;
+		}
+		
+		private void applyStateChange() {
+			switch(state) {
+				case EMPStates.OFFLINE:
+					getSounds().stopSound("BlockAssemblerEnd");
+					getSounds().stopSound("BlockProjectHologramEnd");
+				break;
+				case EMPStates.CHARGING:
+					getSounds().playSound("ShipJumpDriveCharging", 30, 2);
+					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
+				break;
+				case EMPStates.READY:
+					getSounds().stopSound("ShipJumpDriveCharging");
+				break;
+				case EMPStates.FIRING:
+					getSounds().stopSound("ArcDroneLoopSmall");
+					getSounds().playSound("BlockAssemblerEnd", 30, 2);
+					getSounds().playSound("BlockProjectHologramEnd", 30, 2);
+				break;
+				case EMPStates.COOLDOWN:
+					FX.EMPFX.onDoneFiringFX(this, rand);
+					cooldownCycles = 0;
+				break;
+			}
 		}
 		
 		private void applyState() {
@@ -247,6 +253,27 @@ namespace DragonIndustries {
 				
 				break;
 			}
+		}
+		
+		private void fireEMP() {
+			//bool connected = isEMPerConnected();
+			
+			//MyAPIGateway.Utilities.ShowNotification("Block enabled, can run: "+connected);    
+			//IO.debug();
+			//if (connected) {
+				bool doneFiring = affectEnemyBlocks();
+				//NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
+				bool end = doneFiring || fireCount >= MAX_FIRE_COUNT;
+				if (Configuration.getSetting(Settings.SELFDAMAGE).asBoolean())
+					damageOnlineShip();
+				fireCount++;
+				//MyAPIGateway.Utilities.ShowNotification("Pulsed EMP", 5000, MyFontEnum.Red);
+				if (end) { //one-time "fire" action
+					state = EMPStates.COOLDOWN;
+					//MyAPIGateway.Utilities.ShowNotification("Finished firing EMP", 5000, MyFontEnum.Red);
+					//NeedsUpdate &= ~MyEntityUpdateEnum.EACH_FRAME;
+				}
+			//}
 		}
 
         private bool affectEnemyBlocks() {	

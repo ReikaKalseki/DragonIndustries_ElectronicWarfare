@@ -31,23 +31,14 @@ namespace DragonIndustries {
 		
 		public static class EMPFX {
 			
-			public static void chargingFX(EMP emp, bool justOn) {
-				if (justOn) {
-					emp.getSounds().playSound("ShipJumpDriveCharging", 30, 2);
-				}
-				emp.getSounds().playSound("ArcDroneLoopSmall", 30, 4);
-			}
-			
-			public static void ambientFX(EMP emp, bool ready, bool cooldown) {
+			public static void ambientFX(EMP emp) {
 				
 			}
 			
-			public static void fireFX(EMP emp, bool done, Random rand) {
-				if (done) {
-					emp.getSounds().playSound("ArcBlockEject", 30, 4);
-					emp.getSounds().stopSound("ArcDroneLoopSmall");
-				}
-				emp.getSounds().playSound("ShipJumpDriveJumpOut", 30, 4);
+			public static void onDoneFiringFX(EMP emp, Random rand) {
+				emp.getSounds().playSound("ArcBlockEject", 30, 4);
+				emp.getSounds().stopSound("ArcDroneLoopSmall");
+				
 				
 				/*
 				Vector3D m_center = emp.WorldAABB.Center;			
