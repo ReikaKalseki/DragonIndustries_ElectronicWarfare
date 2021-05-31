@@ -26,14 +26,16 @@ namespace DragonIndustries {
 	
 	public static class IO {
 		
-        private static List<EMPReaction> fileData = new List<EMPReaction>();
+        private static List<EMPReaction> reactionFileData = new List<EMPReaction>();
+        private static List<HackingDifficulty> hackFileData = new List<HackingDifficulty>();
 		
 		public static void log(string s) {
-        	MyLog.Default.WriteLineAndConsole("  DragonIndustries: "+s);
+        	MyLog.Default.WriteLineAndConsole("  DragonIndustries Electronic Warfare: "+s);
 		}
 			
 		private static void loadConfigs() {
-	        Configuration.settings.Clear();
+        	log("Loading configs.");
+	        //Configuration.settings.Clear();
 			try {
 				if (MyAPIGateway.Utilities.FileExistsInWorldStorage("config.cfg", typeof(ConfigEntry))) {
 					TextReader reader = MyAPIGateway.Utilities.ReadFileInWorldStorage("config.cfg", typeof(ConfigEntry));
@@ -51,7 +53,8 @@ namespace DragonIndustries {
 	                    		log("Could not parse config entry "+entry.Description+"!");
 	                    		continue;
 	                    	}
-	                    	Configuration.settings.Add(entry.ID, entry);
+	                    	log("Loaded config entry "+entry.ID+" / "+entry.Description+" with "+entry.ValueAsString);
+	                    	Configuration.settings[entry.ID] = entry;
 	                    }
                     }
                 }
@@ -61,20 +64,33 @@ namespace DragonIndustries {
 				log("Threw exception reading general config: "+ex.ToString());
 			}
 			
-	        Configuration.reactionMap.Clear();
 			try {
 				if (MyAPIGateway.Utilities.FileExistsInWorldStorage("config_reactions.cfg", typeof(EMPReaction))) {
 					TextReader reader = MyAPIGateway.Utilities.ReadFileInWorldStorage("config_reactions.cfg", typeof(EMPReaction));
 					string xmlText = reader.ReadToEnd();
 					reader.Close();
-                    fileData = MyAPIGateway.Utilities.SerializeFromXML<List<EMPReaction>>(xmlText);
-                    foreach (EMPReaction entry in fileData) {
-                        if (!Configuration.reactionMap.ContainsKey(entry.BlockType)) {
-                            Configuration.reactionMap.Add(entry.BlockType, entry);
-                        }                        
+                    reactionFileData = MyAPIGateway.Utilities.SerializeFromXML<List<EMPReaction>>(xmlText);
+                    foreach (EMPReaction entry in reactionFileData) {
+                       Configuration.reactionMap[entry.BlockType] = entry;
                     }
                 }
 	        	IO.log("Loaded reaction config. Data = "+toUsefulString(Configuration.reactionMap));
+			}
+			catch (Exception ex) {
+				log("Threw exception reading reaction config: "+ex.ToString());
+			}
+			
+			try {
+				if (MyAPIGateway.Utilities.FileExistsInWorldStorage("config_hack.cfg", typeof(HackingDifficulty))) {
+					TextReader reader = MyAPIGateway.Utilities.ReadFileInWorldStorage("config_hack.cfg", typeof(HackingDifficulty));
+					string xmlText = reader.ReadToEnd();
+					reader.Close();
+                    hackFileData = MyAPIGateway.Utilities.SerializeFromXML<List<HackingDifficulty>>(xmlText);
+                    foreach (HackingDifficulty entry in hackFileData) {
+                       Configuration.hackMap[entry.BlockType] = entry;
+                    }
+                }
+	        	IO.log("Loaded hack config. Data = "+toUsefulString(Configuration.hackMap));
 			}
 			catch (Exception ex) {
 				log("Threw exception reading reaction config: "+ex.ToString());
@@ -136,7 +152,7 @@ namespace DragonIndustries {
 				writer.Flush();
 				writer.Close();
 				
-				IO.log("Saved reactivation list. Data = "+EMP.blockReactivations.ToString());
+				IO.log("Saved reactivation list. Data = "+toUsefulString(EMP.blockReactivations));
 				
 				if (MyAPIGateway.Utilities.FileExistsInWorldStorage("cloaked_grids.dat", typeof(long)))
         			MyAPIGateway.Utilities.DeleteFileInWorldStorage("cloaked_grids.dat", typeof(long));
@@ -191,24 +207,33 @@ namespace DragonIndustries {
 				log("Threw exception writing general config: "+ex2.ToString());
 			}
 			
-			fileData = new List<EMPReaction>();
+			reactionFileData = new List<EMPReaction>();
 			if (MyAPIGateway.Utilities.FileExistsInWorldStorage("config_reactions.cfg", typeof(EMPReaction)))
         		MyAPIGateway.Utilities.DeleteFileInWorldStorage("config_reactions.cfg", typeof(EMPReaction));
         		
 			writer = MyAPIGateway.Utilities.WriteFileInWorldStorage("config_reactions.cfg", typeof(EMPReaction));
 			foreach (var entry in Configuration.reactionMap) {
-				fileData.Add(entry.Value);
+				reactionFileData.Add(entry.Value);
+			}
+			
+			hackFileData = new List<HackingDifficulty>();
+			if (MyAPIGateway.Utilities.FileExistsInWorldStorage("config_hack.cfg", typeof(HackingDifficulty)))
+        		MyAPIGateway.Utilities.DeleteFileInWorldStorage("config_hack.cfg", typeof(HackingDifficulty));
+        		
+			writer = MyAPIGateway.Utilities.WriteFileInWorldStorage("config_hack.cfg", typeof(HackingDifficulty));
+			foreach (var entry in Configuration.hackMap) {
+				hackFileData.Add(entry.Value);
 			}
 			
             try {
 				try {
 					//writer.Write("Serializing a list of size "+fileData.Count+"; sample entry: "+fileData[0]+" for "+fileData[0].BlockType+" with "+fileData[0].Resistance+" @ "+fileData[0].MaxDistance);
 					//writer.Write("Serializes to:");
-					writer.Write(MyAPIGateway.Utilities.SerializeToXML(fileData));
+					writer.Write(MyAPIGateway.Utilities.SerializeToXML(reactionFileData));
 				}
 				catch (Exception ex) {
-					writer.Write("Error while writing config.");
-					writer.Write("\n\nData: "+fileData);
+					writer.Write("Error while writing reaction config.");
+					writer.Write("\n\nData: "+reactionFileData);
 					writer.Write("\n\nException: "+ex);
 				}
 				writer.Flush();
@@ -216,6 +241,24 @@ namespace DragonIndustries {
 			}
 			catch (Exception ex2) {
 				log("Threw exception writing reaction config: "+ex2.ToString());
+			}
+			
+            try {
+				try {
+					//writer.Write("Serializing a list of size "+fileData.Count+"; sample entry: "+fileData[0]+" for "+fileData[0].BlockType+" with "+fileData[0].Resistance+" @ "+fileData[0].MaxDistance);
+					//writer.Write("Serializes to:");
+					writer.Write(MyAPIGateway.Utilities.SerializeToXML(hackFileData));
+				}
+				catch (Exception ex) {
+					writer.Write("Error while writing hack config.");
+					writer.Write("\n\nData: "+hackFileData);
+					writer.Write("\n\nException: "+ex);
+				}
+				writer.Flush();
+				writer.Close();
+			}
+			catch (Exception ex2) {
+				log("Threw exception writing hack config: "+ex2.ToString());
 			}
         }
         

@@ -181,7 +181,7 @@ namespace DragonIndustries {
 				case EMPStates.FIRING:
 					if (fireCountdown > 0) {
 						fireCountdown--;
-						MyAPIGateway.Utilities.ShowNotification("EMP firing in "+fireCountdown+" seconds!", 1500, MyFontEnum.Blue);
+						//MyAPIGateway.Utilities.ShowNotification("EMP firing in "+fireCountdown+" seconds!", 1500, MyFontEnum.Blue);
 					}
 					getSounds().playSound("ShipJumpDriveJumpOut", 30, 4);
 				break;
@@ -226,7 +226,7 @@ namespace DragonIndustries {
 				break;
 				case EMPStates.READY:
 					getSounds().playSound("ArcDroneLoopSmall", 30, 4);
-					MyAPIGateway.Utilities.ShowNotification("EMP ready to fire!", 1500, MyFontEnum.Blue);
+					//MyAPIGateway.Utilities.ShowNotification("EMP ready to fire!", 1500, MyFontEnum.Blue);
 				break;
 				case EMPStates.FIRING:
 					fireCountdown = 10;

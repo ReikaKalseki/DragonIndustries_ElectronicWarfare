@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ResearchBlocks>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="HackingBlock_Small" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="HackingBlock_Large" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="EMP_Large" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="EMP_Small" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="CloakingDevice_Large" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+    <ResearchBlock xsi:type="ResearchBlock">
+      <Id Type="UpgradeModule" Subtype="CloakingDevice_Small" />
+      <UnlockedByGroups>
+        <GroupSubtype>26</GroupSubtype>
+      </UnlockedByGroups>
+    </ResearchBlock>
+  </ResearchBlocks>
+</Definitions>

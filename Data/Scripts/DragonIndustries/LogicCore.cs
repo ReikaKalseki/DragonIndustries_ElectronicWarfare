@@ -63,8 +63,8 @@ namespace DragonIndustries {
         	thisBlock = Container.Entity as IMyFunctionalBlock;
 			thisGrid = thisBlock.CubeGrid as IMyCubeGrid;
 			
-			thisBlock.Enabled = false;
-			Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
+			//thisBlock.Enabled = false; //causes it to turn off every time you load the game
+			//Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
 			
             energySink = new MyResourceSinkComponent(1);
             energySink.Init(MyStringHash.GetOrCompute(powerPriority), thisGrid.GridSizeEnum == MyCubeSize.Small ? smallGridMW : largeGridMW, calcRequiredPower);
@@ -93,8 +93,8 @@ namespace DragonIndustries {
         }
         
 		public sealed override void UpdateOnceBeforeFrame() {
-			thisBlock.Enabled = false;
-			Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
+			//thisBlock.Enabled = false;
+			//Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
 		}
         
         protected void prepareEmissives(string prefix, int count) {

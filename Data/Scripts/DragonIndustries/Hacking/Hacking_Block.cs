@@ -241,13 +241,16 @@ namespace DragonIndustries
         	if (block is IMyBatteryBlock) {
         		return TargetCategories.POWER;
         	}
-        	if (block is IMyReactor) {
+        	if (block is IMyPowerProducer) {
         		return TargetCategories.POWER;
         	}
         	if (block is IMyShipController) {
         		return TargetCategories.CONTROL;
         	}
         	if (block is IMyGyro) {
+        		return TargetCategories.CONTROL;
+        	}
+        	if (block is IMyRadioAntenna || block is IMyLaserAntenna) {
         		return TargetCategories.CONTROL;
         	}
         	if (block is IMyCargoContainer) {
@@ -307,10 +310,7 @@ namespace DragonIndustries
         }
 
         private bool isHackable(IMyTerminalBlock block) {
-            if (!block.IsFunctional)
-                return false;
-
-            return block.GetUserRelationToOwner(thisBlock.OwnerId) == MyRelationsBetweenPlayerAndBlock.Enemies;
+            return block.IsFunctional && block.GetUserRelationToOwner(thisBlock.OwnerId) == MyRelationsBetweenPlayerAndBlock.Enemies;
         }
 
         public void updateRender() {
@@ -399,7 +399,7 @@ namespace DragonIndustries
         	}
 			targetID = block.EntityId;
         	HackingDifficulty entry = Configuration.getHackingDifficulty(block);
-        	targetDifficulty = Math.Max(1, (float)(entry.DifficultyFactor*1.2*Math.Pow(getComputerCount(block.SlimBlock), 0.675)));
+        	targetDifficulty = Math.Max(1, (float)(entry.DifficultyFactor*Configuration.getSetting(Settings.HACKSCALE).asFloat()*0.8*Math.Pow(getComputerCount(block.SlimBlock), 0.675)));
         	targetTime = entry.RequiredTime;
         	cyclesUntilAttempt = targetTime;
         	retaliatoryDamage = Configuration.getSetting(Settings.HACKDAMAGE).asBoolean() ? entry.Retaliation : 0;

@@ -51,17 +51,17 @@ namespace DragonIndustries {
 				Type = "String";
 			ID = s.ToString();
 			
-			if (!settingsByName.ContainsValue(s)) {
-				settingsByName.Add(ID, s);
-				settingsByDesc.Add(Description, s);
-			}
+			settingsByName[ID] = s;
+			settingsByDesc[Description] = s;
+			
+			IO.log("Cached "+s+" as ID "+ID+" and desc "+Description);
 		}
 		
 		public void loadValue() {
 			value = parseType();
 			Settings s;
-			settingsByDesc.TryGetValue(Description, out s);
-			ID = s.ToString();
+			if (settingsByDesc.TryGetValue(Description, out s))
+				ID = s.ToString();
 		}
 		
 		private object parseType() {
@@ -107,6 +107,7 @@ namespace DragonIndustries {
 		WARHEAD,
 		SELFDAMAGE,
 		HACKDAMAGE,
+		HACKSCALE,
 		HACKSPEED,
 		COMPUTERCONVERT,
 		ALLOWHACKSKIP,

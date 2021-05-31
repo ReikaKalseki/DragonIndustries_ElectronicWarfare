@@ -35,15 +35,16 @@ namespace DragonIndustries {
 		private static readonly HackingDifficulty defaultDifficulty = new HackingDifficulty("default", 1, 1); //generic fallback for ones without hardcoded resistances or reactions
 		
 		public static void load() {
-			IO.loadSavedData();
 			
             addDefaultSettings();
+            
+			IO.loadSavedData();
             addDefaultReactions();
             addDefaultHackingDifficulties();
             
             IO.writeConfigs();
             
-            if (getSetting(Settings.WARHEAD).asBoolean())
+            if (getSetting(Settings.WARHEAD).hasValue() && getSetting(Settings.WARHEAD).asBoolean())
             	getEMPReaction("Warhead").addEffect(block => (block as IMyWarhead).Detonate(), 20);
 		}
 		
@@ -57,6 +58,7 @@ namespace DragonIndustries {
             defaultSettings.Add(new ConfigEntry(Settings.WARHEAD, "EMP Can Detonate Warheads", true));
             defaultSettings.Add(new ConfigEntry(Settings.SELFDAMAGE, "EMP Damages Firing Ship If Powered", true));
             defaultSettings.Add(new ConfigEntry(Settings.HACKDAMAGE, "Allow Hacking Computer to Receive Retaliatory Damage", true));
+            defaultSettings.Add(new ConfigEntry(Settings.HACKSCALE, "Hacking Difficulty Global Scale Factor", 1.0F));
             defaultSettings.Add(new ConfigEntry(Settings.HACKSPEED, "Hacking Computer Speed (Cycle Time In Sixths of A Second)", 3));
             defaultSettings.Add(new ConfigEntry(Settings.COMPUTERCONVERT, "Hacking Computers Convert Each Other", true));
             defaultSettings.Add(new ConfigEntry(Settings.ALLOWHACKSKIP, "Allow Hacking Computers To Ignore User Specified Blocks", true));
@@ -69,9 +71,10 @@ namespace DragonIndustries {
             defaultSettings.Add(new ConfigEntry(Settings.RADARPOWERLARGE, "Radar Scanner Base Power Consumption (MW) Per km2 Range - Large Grid", 0.15F)); 
             			
             foreach (ConfigEntry val in defaultSettings) {
-                if (!settings.ContainsKey(val.ID))
-                    settings.Add(val.ID, val);
+            	settings[val.ID] = val;
 			}
+            
+            IO.log("Loaded default settings. "+IO.toUsefulString(settings));
         }
 		
 		private static void addDefaultHackingDifficulties() {
@@ -95,11 +98,10 @@ namespace DragonIndustries {
 			
 			defaultDifficulties.Add(new HackingDifficulty("JumpDrive", 2, 0.5F));
 			
-			defaultDifficulties.Add(new HackingDifficulty("Hacking", 10, 1F, 0.15F));
+			defaultDifficulties.Add(new HackingDifficulty("Hacking", 10, 4F, 0.15F));
             
            	foreach (HackingDifficulty val in defaultDifficulties) {
-                if (!hackMap.ContainsKey(val.BlockType))
-                    hackMap.Add(val.BlockType, val);
+				hackMap[val.BlockType] = val;
 			}
 		}
 		
@@ -145,8 +147,7 @@ namespace DragonIndustries {
             defaultReactions.Add(new EMPReaction("Warhead",			25,		0,		30,		-1F			));
             
            	foreach (EMPReaction val in defaultReactions) {
-                if (!reactionMap.ContainsKey(val.BlockType))
-                    reactionMap.Add(val.BlockType, val);
+            	reactionMap[val.BlockType] = val;
 			}
 		}
         
