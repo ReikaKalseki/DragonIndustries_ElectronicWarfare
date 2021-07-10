@@ -110,10 +110,12 @@ namespace DragonIndustries
            		blinkTime--;
         	}
         	
-        	if (hackTick >= HACK_SPEED)
-        		tickHack();
-        	else
-        		hackTick++;
+        	if (Configuration.getSetting(Settings.ALLOWHACKSTATION).asBoolean() || !thisGrid.IsStatic) {
+	        	if (hackTick >= HACK_SPEED)
+	        		tickHack();
+	        	else
+	        		hackTick++;
+        	}
         }
         
         private void tickHack() {
@@ -248,6 +250,9 @@ namespace DragonIndustries
         		return TargetCategories.CONTROL;
         	}
         	if (block is IMyGyro) {
+        		return TargetCategories.CONTROL;
+        	}
+        	if (block is IMySensorBlock) {
         		return TargetCategories.CONTROL;
         	}
         	if (block is IMyRadioAntenna || block is IMyLaserAntenna) {
@@ -388,7 +393,6 @@ namespace DragonIndustries
 			foreach (IMySlimBlock panelslim in blocks) {
 				IMyTextPanel panel = panelslim.FatBlock as IMyTextPanel;
 				panel.WriteText(sb.ToString());
-				panel.ShowPublicTextOnScreen();
 			}
         }
 

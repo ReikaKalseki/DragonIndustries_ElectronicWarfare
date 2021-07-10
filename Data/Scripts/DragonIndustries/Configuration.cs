@@ -62,6 +62,7 @@ namespace DragonIndustries {
             defaultSettings.Add(new ConfigEntry(Settings.HACKSPEED, "Hacking Computer Speed (Cycle Time In Sixths of A Second)", 3));
             defaultSettings.Add(new ConfigEntry(Settings.COMPUTERCONVERT, "Hacking Computers Convert Each Other", true));
             defaultSettings.Add(new ConfigEntry(Settings.ALLOWHACKSKIP, "Allow Hacking Computers To Ignore User Specified Blocks", true));
+            defaultSettings.Add(new ConfigEntry(Settings.ALLOWHACKSTATION, "Allow Hacking Station Grids", true));
             defaultSettings.Add(new ConfigEntry(Settings.HACKRETRY, "Hacking Computers Lock To Target Until Success", false));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWERSMALL, "Cloaking Device Base Power Consumption (MW) Per Tonne - Small Grid", 0.5F));
             defaultSettings.Add(new ConfigEntry(Settings.CLOAKPOWERLARGE, "Cloaking Device Base Power Consumption (MW) Per Tonne - Large Grid", 0.016F));
@@ -91,6 +92,9 @@ namespace DragonIndustries {
 			defaultDifficulties.Add(new HackingDifficulty("Control Station", 3, 0.1F));
 			defaultDifficulties.Add(new HackingDifficulty("Flight Seat", 3, 0.1F));
 			defaultDifficulties.Add(new HackingDifficulty("RemoteControl", 5, 10F, 0.01F)); //but this is quite the opposite (glares at Atmospheric Encounters)
+			
+			defaultDifficulties.Add(new HackingDifficulty("TextPanel", 1, 0.05F));
+			defaultDifficulties.Add(new HackingDifficulty("LCDPanel", 1, 0.05F));
 			
 			defaultDifficulties.Add(new HackingDifficulty("Battery", 5, 3F)); //to avoid trivial salvage captures by way of hacking the power
 			defaultDifficulties.Add(new HackingDifficulty("Generator", 5, 2.5F));
