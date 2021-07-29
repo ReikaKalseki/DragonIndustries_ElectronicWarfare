@@ -118,7 +118,7 @@ namespace DragonIndustries
                 running = true;
             }
             
-            MyAPIGateway.Utilities.ShowNotification("Running: "+running);
+           // MyAPIGateway.Utilities.ShowNotification("Running: "+running);
             
             HashSet<IMyCubeGrid> grids = new HashSet<IMyCubeGrid>();
             grids.Add(thisGrid);

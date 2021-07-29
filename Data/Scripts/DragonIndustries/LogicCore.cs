@@ -67,7 +67,7 @@ namespace DragonIndustries {
 			//Sandbox.ModAPI.Ingame.TerminalBlockExtentions.ApplyAction(thisBlock, "OnOff_Off");
 			
             energySink = new MyResourceSinkComponent(1);
-            energySink.Init(MyStringHash.GetOrCompute(powerPriority), thisGrid.GridSizeEnum == MyCubeSize.Small ? smallGridMW : largeGridMW, calcRequiredPower);
+            energySink.Init(MyStringHash.GetOrCompute(powerPriority), thisGrid.GridSizeEnum == MyCubeSize.Small ? smallGridMW : largeGridMW, calcRequiredPower, (MyCubeBlock)thisBlock);
             if (thisBlock.Components.Contains(typeof(MyResourceSinkComponent))) {
               	IO.log("Power sinks already present in "+this+" #"+Entity.EntityId+":");
               	List<MyResourceSinkComponent> li = new List<MyResourceSinkComponent>();
