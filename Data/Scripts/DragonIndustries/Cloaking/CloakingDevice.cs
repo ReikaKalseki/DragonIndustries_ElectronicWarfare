@@ -42,6 +42,7 @@ namespace DragonIndustries
         
         public bool enableDerendering = false;
         private readonly List<IMySlimBlock> turrets = new List<IMySlimBlock>();
+        private readonly List<IMySlimBlock> connections = new List<IMySlimBlock>();
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder) {	            
         	doSetup("Defense", 0.001F, MyEntityUpdateEnum.EACH_100TH_FRAME);
@@ -55,7 +56,7 @@ namespace DragonIndustries
         		return;
         	sb.Append("Ship mass is "+thisGrid.Physics.Mass+" kg. Base power use is "+MW_PER_TONNE+" kW/kg");
         	sb.Append("\n\n");
-        	sb.Append("Weapons (x"+turrets.Count/2+") Active: "+isShooting());
+        	sb.Append("Weapons (x"+turrets.Count+") Active: "+isShooting());
         	if (isShooting()) {
         		sb.Append(" (energy use x"+WEAPON_USE_MULTIPLIER+")");
         	}
@@ -66,6 +67,8 @@ namespace DragonIndustries
         	}
         	sb.Append("\n\n");
         	sb.Append("Required power is "+getRequiredPower()+" MW");
+        	sb.Append("\n\n");
+        	sb.Append("Cloaking "+connections+" grids");
         }
 
         public override void Close() {
@@ -115,20 +118,36 @@ namespace DragonIndustries
                 running = true;
             }
             
-            //MyAPIGateway.Utilities.ShowNotification("Running: "+running);
+            MyAPIGateway.Utilities.ShowNotification("Running: "+running);
+            
+            HashSet<IMyCubeGrid> grids = new HashSet<IMyCubeGrid>();
+            grids.Add(thisGrid);
+            
+            connections.Clear();
+            thisGrid.GetBlocks(connections, b => b.FatBlock is IMyMechanicalConnectionBlock);
+            foreach (IMySlimBlock b in connections) {
+            	IMyCubeGrid connection = ((IMyMechanicalConnectionBlock)b.FatBlock).TopGrid;
+            	if (connection != null) {
+            		grids.Add(connection);
+            	}
+            }
 
             if (running) {
-                cloakedGrids.Add(thisGrid.EntityId);
-                if (shouldHideRender()) {
-                	setGridVisible(thisGrid, false);
-                }
-                else {
-	                setGridVisible(thisGrid, true);
-                }
+            	foreach (IMyCubeGrid id in grids) {
+                	cloakedGrids.Add(id.EntityId);
+	                if (shouldHideRender()) {
+	                	setGridVisible(id, false);
+	                }
+	                else {
+		                setGridVisible(id, true);
+	                }
+            	}
             }
             else {
-                cloakedGrids.Remove(thisGrid.EntityId);
-                setGridVisible(thisGrid, true);
+            	foreach (IMyCubeGrid id in grids) {
+                	cloakedGrids.Remove(id.EntityId);
+                	setGridVisible(id, true);
+            	}
             }
             
             sync();
@@ -177,8 +196,7 @@ namespace DragonIndustries
 
         private bool isShooting() {            
         	turrets.Clear();
-            thisGrid.GetBlocks(turrets, b => b.FatBlock is IMyUserControllableGun);
-            thisGrid.GetBlocks(turrets, b => b.FatBlock is IMyLargeTurretBase);
+            thisGrid.GetBlocks(turrets, b => b.FatBlock is IMyUserControllableGun || b.FatBlock is IMyLargeTurretBase);
             
             foreach (IMySlimBlock turret in turrets) {
             	MyObjectBuilder_CubeBlock obj = null;
